@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
-import { LoginPage } from '../pages/loginpage';
+import { LoginPage } from '../pages/LoginPage';
 import { TreatmentsPage } from '../pages/Treatments';
-import { defineConfig, devices } from '@playwright/test';
+
 
 test('user can login to the application', async ({ page }) => {
   const loginPage = new LoginPage(page);
@@ -20,7 +20,7 @@ test('user can login to the application', async ({ page }) => {
   await page.pause();
 });
 
-test('User can navigate to Treatments @smoke', async ({ page }) => {
+test('User can navigate to Treatments', async ({ page }) => {
   const loginPage = new LoginPage(page);
   const treatmentsPage = new TreatmentsPage(page);
 
@@ -34,5 +34,5 @@ test('User can navigate to Treatments @smoke', async ({ page }) => {
   await treatmentsPage.goToTreatments();
   await treatmentsPage.createTreatment();
 
-  await page.pause();
+  await page.pause();  
 });

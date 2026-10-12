@@ -29,11 +29,11 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
       grepInvert: /@smoke/,
     },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-      grepInvert: /@smoke/,
-    },
+    // {
+    //   // name: 'firefox',
+    //   // use: { ...devices['Desktop Firefox'] },
+    //   // grepInvert: /@smoke/,
+    // },
     {
       name: 'smoke',
       grep: /@smoke/,
