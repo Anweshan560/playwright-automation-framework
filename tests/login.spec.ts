@@ -2,16 +2,18 @@ import { test, expect } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
 import { TreatmentsPage } from '../pages/Treatments';
 
+const username = process.env.TEST_USERNAME;
+const password = process.env.TEST_PASSWORD;
+if (!username || !password) {
+  throw new Error('TEST_USERNAME and TEST_PASSWORD must be set in .env');
+}
+
 
 test('user can login to the application', async ({ page }) => {
   const loginPage = new LoginPage(page);
 
   await loginPage.goto();
-
-  await loginPage.login(
-    'anweshan2000+new@gmail.com',
-    'Adminanweshan@123'
-  );
+  await loginPage.login(username, password);
 
   await expect(page).toHaveURL(
     'https://beta.replyn.dev/dashboard'
@@ -27,12 +29,12 @@ test('User can navigate to Treatments', async ({ page }) => {
   await loginPage.goto();
 
   await loginPage.login(
-    'anweshan2000+new@gmail.com',
-    'Adminanweshan@123'
+    username,
+    password
   );
 
   await treatmentsPage.goToTreatments();
   await treatmentsPage.createTreatment();
 
-  await page.pause();  
+  await page.pause();
 });
