@@ -14,6 +14,7 @@ export default defineConfig({
   outputDir: './test-results',
   use: {
     headless: !!process.env.CI,
+    permissions: [],
 
     launchOptions: {
       slowMo: 500,
