@@ -1,9 +1,4 @@
-
-- name: Run Playwright tests
-  run: npx playwright test
-  env:
-    TEST_USERNAME: ${{ secrets.SECRETU }}
-    TEST_PASSWORD: ${{ secrets.SECRETP }}
+name: Playwright Tests
 
 on:
   push:
@@ -36,3 +31,6 @@ jobs:
 
       - name: Run Playwright tests
         run: npx playwright test
+        env:
+          TEST_USERNAME: ${{ secrets.SECRETU }}
+          TEST_PASSWORD: ${{ secrets.SECRETP }}
