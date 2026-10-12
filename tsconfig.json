@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "nodenext",
+    "esModuleInterop": true,
+    "types": ["node"]
+  },
+  "include": ["tests", "playwright.config.ts", "pages"]
+}

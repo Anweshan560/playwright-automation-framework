@@ -1,6 +1,5 @@
 import 'dotenv/config';
 import { defineConfig, devices } from '@playwright/test';
-
 export default defineConfig({
   testDir: './tests',
   
@@ -14,7 +13,7 @@ export default defineConfig({
   ],
   outputDir: './test-results',
   use: {
-    headless: false,
+    headless: !!process.env.CI,
 
     launchOptions: {
       slowMo: 500,
