@@ -9,8 +9,8 @@ on:
       - feature/playwright-framework
 
 jobs:
-  test:
-    name: Run Playwright Tests
+  smoke:
+    name: Smoke Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -29,8 +29,71 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      - name: Run Playwright tests
-        run: npx playwright test
+      - name: Run smoke tests
+        run: npm run test:smoke
         env:
           TEST_USERNAME: ${{ secrets.SECRETU }}
           TEST_PASSWORD: ${{ secrets.SECRETP }}
+
+      - name: Upload smoke report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-report
+          path: playwright-report/
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Upload smoke test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-results
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: warn
+
+  regression:
+    name: Full Regression Suite
+    runs-on: ubuntu-latest
+    needs: smoke
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run regression tests
+        run: npm run test:regression
+        env:
+          TEST_USERNAME: ${{ secrets.SECRETU }}
+          TEST_PASSWORD: ${{ secrets.SECRETP }}
+
+      - name: Upload regression report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-report
+          path: playwright-report/
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Upload regression test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-test-results
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: warn

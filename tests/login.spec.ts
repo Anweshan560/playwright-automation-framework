@@ -9,7 +9,7 @@ if (!username || !password) {
 }
 
 
-test('user can login to the application', async ({ page }) => {
+test('[@smoke] user can login to the application', async ({ page }) => {
   const loginPage = new LoginPage(page);
 
   await loginPage.goto();

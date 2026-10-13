@@ -5,8 +5,9 @@ export default defineConfig({
   
   fullyParallel: true,
   forbidOnly: false,
-  retries: 0,
+  retries: process.env.CI ? 2 : 0,
   workers: undefined,
+  
   reporter: [
     ['list'],
     ['html', { open: 'never' }],
@@ -15,6 +16,7 @@ export default defineConfig({
   use: {
     headless: !!process.env.CI,
     permissions: [],
+    
 
     launchOptions: {
       slowMo: 500,
@@ -39,7 +41,11 @@ export default defineConfig({
       grep: /@smoke/,
       use: { ...devices['Desktop Chrome'] },
     },
+    
   ],
+  
 
 
 });
+
+
