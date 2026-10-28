@@ -16,7 +16,7 @@ export class LoginPage {
   }
 
   async goto() {
-    await this.page.goto('https://beta.replyn.dev/auth/sign-in');
+    await this.page.goto('/auth/sign-in');
   }
 
   async login(username: string, password: string) {

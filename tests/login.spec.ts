@@ -1,40 +1,16 @@
 import { test, expect } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
-import { TreatmentsPage } from '../pages/Treatments';
+import { getCredentials } from '../utils/auth';
 
-const username = process.env.TEST_USERNAME;
-const password = process.env.TEST_PASSWORD;
-if (!username || !password) {
-  throw new Error('TEST_USERNAME and TEST_PASSWORD must be set in .env');
-}
+// Starts logged out so it exercises the real login form.
+test.use({ storageState: { cookies: [], origins: [] } });
 
-
-test('[@smoke] user can login to the application', async ({ page }) => {
+test('user can login to the application', { tag: '@smoke' }, async ({ page }) => {
+  const { username, password } = getCredentials();
   const loginPage = new LoginPage(page);
 
   await loginPage.goto();
   await loginPage.login(username, password);
 
-  await expect(page).toHaveURL(
-    'https://beta.replyn.dev/dashboard'
-  );
-
-  await page.pause();
-});
-
-test('User can navigate to Treatments', async ({ page }) => {
-  const loginPage = new LoginPage(page);
-  const treatmentsPage = new TreatmentsPage(page);
-
-  await loginPage.goto();
-
-  await loginPage.login(
-    username,
-    password
-  );
-
-  await treatmentsPage.goToTreatments();
-  await treatmentsPage.createTreatment();
-
-  await page.pause();
+  await expect(page).toHaveURL('/dashboard');
 });

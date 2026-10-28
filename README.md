@@ -18,19 +18,24 @@ This repository contains a UI test automation framework built with Playwright an
 .
 ├── .github/
 │   └── workflows/
-│       └── playwright.yml
-├── pages/
+│       └── playwright.yml      # CI: smoke job, then regression job
+├── pages/                      # Page objects
 │   ├── LoginPage.ts
 │   └── Treatments.ts
+├── reporters/
+│   └── failure-reporter.ts     # Writes a readable .txt per failed test
 ├── tests/
-│   └── login.spec.ts
+│   ├── auth.setup.ts           # Logs in once and saves the session
+│   ├── login.spec.ts           # @smoke: login through the UI
+│   └── treatments.spec.ts      # Creates a treatment, then deletes it
+├── utils/
+│   └── auth.ts                 # Credentials and saved-session path
+├── .env.example
 ├── playwright.config.ts
 ├── package.json
-├── package-lock.json
+├── tsconfig.json
 └── README.md
 ```
-
-Update this tree if your repository contains additional folders or files.
 
 ## Prerequisites
 
@@ -51,18 +56,17 @@ npx playwright install
 
 ## Environment Variables
 
-Create a local `.env` file in the project root:
+Copy `.env.example` to `.env` in the project root and fill it in:
 
 ```text
+BASE_URL=                  # optional, defaults to https://beta.replyn.dev
 TEST_USERNAME=your-test-username
 TEST_PASSWORD=your-test-password
 ```
 
-Ensure your Playwright configuration loads the `.env` file locally, for example with `import 'dotenv/config'`.
+`playwright.config.ts` loads `.env` automatically. `.env` is git-ignored; never commit real credentials.
 
-Never commit `.env` or real credentials. Add `.env` to `.gitignore`.
-
-For GitHub Actions, configure repository secrets and map them to `TEST_USERNAME` and `TEST_PASSWORD` in the workflow.
+For GitHub Actions, the repository secrets `SECRETU` and `SECRETP` are mapped to `TEST_USERNAME` and `TEST_PASSWORD` in the workflow.
 
 ## Running Tests
 
@@ -90,6 +94,20 @@ Run tests in headed mode locally:
 npx playwright test --headed
 ```
 
+Type-check the project:
+
+```bash
+npm run typecheck
+```
+
+## How the Suite Is Organised
+
+- **`setup` project** (`tests/auth.setup.ts`) logs in once and saves the session to `playwright/.auth/user.json`.
+- **`chromium` project** (regression) depends on `setup` and reuses that session, so tests start already logged in.
+- **`smoke` project** runs tests tagged `@smoke` (`test('...', { tag: '@smoke' }, ...)`). The login smoke test starts logged out on purpose.
+- Tests that create data delete it afterwards, so beta does not fill up with test records.
+- Locally, browsers run headed with `slowMo` so you can watch; on CI they run headless at full speed, and `test.only` fails the build.
+
 ## Page Object Model
 
 Page objects keep locators and page actions separate from test scenarios.
@@ -116,6 +134,8 @@ The workflow:
 3. Inspect the failed job's logs.
 4. Download available artifacts, such as the HTML report, screenshots, and traces.
 5. Reproduce the failure locally and verify the fix.
+
+Each failed test also gets a plain-text summary (error, screenshot and trace paths) in `test-results/failures/`.
 
 To view a locally generated HTML report:
 

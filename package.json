@@ -1,14 +1,14 @@
 {
   "name": "ai-test-automation",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Playwright + TypeScript UI test framework for Replyn",
   "scripts": {
     "test": "playwright test",
     "test:chrome": "playwright test --project=chromium",
     "test:ui": "playwright test --ui",
     "test:smoke": "playwright test --grep @smoke",
-    "test:regression": "playwright test"
+    "test:regression": "playwright test",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",
@@ -16,9 +16,11 @@
   "type": "commonjs",
   "devDependencies": {
     "@playwright/test": "^1.63.0",
-    "@types/node": "^26.6.5"
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
   },
   "dependencies": {
-    "dotenv": "^18.0.6"
+    "dotenv": "^18.0.7"
   }
 }
