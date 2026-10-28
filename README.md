@@ -1,162 +1,121 @@
-# Playwright Automation Framework
+# Replyn Test Suite
 
-## Overview
+End-to-end tests for the [Replyn](https://beta.replyn.dev) clinic app, written with Playwright and TypeScript.
+They cover **login** (valid and invalid credentials), managing **doctors** and **treatments** in the UI
+(create, edit, delete, required fields, server errors), and the matching **REST and login APIs**.
 
-This repository contains a UI test automation framework built with Playwright and TypeScript. It uses the Page Object Model (POM) to organize page interactions and GitHub Actions to run tests automatically.
+## Setup
 
-## Tech Stack
-
-- Playwright Test
-- TypeScript
-- Node.js and npm
-- GitHub Actions
-- Page Object Model (POM)
-
-## Project Structure
-
-```text
-.
-├── .github/
-│   └── workflows/
-│       └── playwright.yml      # CI: smoke job, then regression job
-├── pages/                      # Page objects
-│   ├── LoginPage.ts
-│   └── Treatments.ts
-├── reporters/
-│   └── failure-reporter.ts     # Writes a readable .txt per failed test
-├── tests/
-│   ├── auth.setup.ts           # Logs in once and saves the session
-│   ├── login.spec.ts           # @smoke: login through the UI
-│   └── treatments.spec.ts      # Creates a treatment, then deletes it
-├── utils/
-│   └── auth.ts                 # Credentials and saved-session path
-├── .env.example
-├── playwright.config.ts
-├── package.json
-├── tsconfig.json
-└── README.md
-```
-
-## Prerequisites
-
-- Node.js 20 or a compatible version
-- npm
-- Git
-
-## Installation
-
-Clone the repository and enter the project directory:
+**1. Install** (needs Node.js 20+):
 
 ```bash
-git clone <your-repository-url>
-cd <your-project-directory>
 npm ci
-npx playwright install
+npx playwright install chromium
 ```
 
-## Environment Variables
-
-Copy `.env.example` to `.env` in the project root and fill it in:
+**2. Configure:** copy `.env.example` to `.env` and fill in the test account:
 
 ```text
-BASE_URL=                  # optional, defaults to https://beta.replyn.dev
-TEST_USERNAME=your-test-username
-TEST_PASSWORD=your-test-password
+TEST_USERNAME=your-test-account@example.com
+TEST_PASSWORD=your-password
 ```
 
-`playwright.config.ts` loads `.env` automatically. `.env` is git-ignored; never commit real credentials.
+Everything else in `.env.example` is optional and defaults to the beta environment.
+`.env` is git-ignored, so never commit it. On CI the GitHub secrets `SECRETU` and `SECRETP` provide the account.
 
-For GitHub Actions, the repository secrets `SECRETU` and `SECRETP` are mapped to `TEST_USERNAME` and `TEST_PASSWORD` in the workflow.
+**3. Run:**
 
-## Running Tests
+| What                                   | Command                                         |
+| -------------------------------------- | ----------------------------------------------- |
+| Everything                             | `npm test`                                      |
+| Smoke test only (is the app up?)       | `npm run test:smoke`                            |
+| UI tests only                          | `npm run test:ui`                               |
+| API tests only                         | `npm run test:api`                              |
+| One file                               | `npx playwright test tests/ui/doctors.spec.ts`  |
+| One test, by name                      | `npx playwright test -g "when user deletes it"` |
+| Headless (no browser window)           | `npm run test:headless`                         |
+| Headed (watch the browser)             | `npm run test:headed`                           |
+| UI mode (pick, re-run and debug tests) | `npm run test:debug`                            |
+| Type-check / format                    | `npm run typecheck` / `npm run format`          |
 
-Run the complete test suite:
+Locally the browser window is visible by default. `test:headless` hides it, and accepts the same
+options: `npm run test:headless -- tests/clinic/doctors`. You can also set `HEADLESS=true` in `.env`.
+
+Every run starts with `tests/setup/auth.setup.ts`, which logs in once and saves the session for the other tests.
+
+## Folder structure
+
+| Folder         | What's in it                                                                                   |
+| -------------- | ---------------------------------------------------------------------------------------------- |
+| `tests/ui/`    | Browser tests: what a user does and sees.                                                      |
+| `tests/api/`   | API tests: status codes, response bodies and times, error cases.                               |
+| `tests/setup/` | Logs in once before the other tests and saves the session.                                     |
+| `pages/`       | Page objects: _how_ to use each page (locators and actions), so tests only say _what_ happens. |
+| `api/`         | API clients: one small class per endpoint group, plus the field-name mapping to the UI forms.  |
+| `fixtures/`    | The `test` that every spec imports, ready-made with page objects, API clients and cleanup.     |
+| `config/`      | `env.ts`: the only place that reads `.env` (URLs, credentials, limits).                        |
+| `utils/`       | Helpers: Faker test data, network recording/mocking, response timing.                          |
+| `reporters/`   | Writes a plain-text summary of every failed test to `test-results/failures/`.                  |
+| `.github/`     | CI: the smoke test first, then the full suite, on every push and pull request.                 |
+
+## Adding a test
+
+Import `test` and `expect` from `fixtures/test` (not from `@playwright/test`), ask for the page objects and
+clients you need, and describe the behaviour with `test.step()`:
+
+```ts
+import { test, expect } from '../../fixtures/test';
+import { toDoctorPayload } from '../../api/DoctorsApi';
+import { buildDoctor } from '../../utils/testData';
+
+test('should show a new doctor in the doctors list', async ({ doctorsPage, doctorsApi, cleanup }) => {
+  // 1. Arrange: create the data this test needs (the API is the fastest way).
+  const doctor = await test.step('create a doctor', () =>
+    doctorsApi.createRecord(toDoctorPayload(buildDoctor())));
+  // 2. Always register cleanup, so the test leaves nothing behind even if it fails.
+  cleanup.add(`doctor "${doctor.name}"`, () => doctorsApi.deleteIfExists(doctor.id));
+
+  // 3. Act and assert.
+  await test.step('open the doctors list', () => doctorsPage.openList());
+  await test.step('the doctor is listed', async () => {
+    await expect(doctorsPage.rowFor(doctor.name)).toBeVisible();
+  });
+});
+```
+
+Guidelines:
+
+- **Name tests like sentences:** `should <expected result> when <action>`.
+- **Locators belong in page objects.** Prefer `getByRole` > `getByLabel` > `getByPlaceholder` > `getByText` > `getByTestId`.
+  Use CSS only when nothing else works, and add a comment explaining why.
+- **Never use `waitForTimeout`.** Use `expect(...)` (which retries) or wait for a specific API response
+  (`waitForApiResponse` in `utils/network.ts`).
+- **Every test creates its own data** with `utils/testData.ts` and cleans it up with `cleanup.add()`.
+- A new page? Add a class in `pages/`, register it in `fixtures/test.ts`, and give every public method a short JSDoc.
+
+## Viewing the report
+
+After any run:
 
 ```bash
-npx playwright test
+npm run report
 ```
 
-Run smoke tests:
+This opens the HTML report: each test with its steps, and for failures a screenshot, a trace you can
+step through, and the error. On CI, download the `smoke-report` / `regression-report` artifact from the
+workflow run, unzip it, and run `npx playwright show-report <folder>`.
 
-```bash
-npm run test:smoke
+### Failure screenshots
+
+Every failed test also gets a screenshot and a plain-text summary in `test-results/failures/`, named after
+**where** it failed: `<feature folder>__<test name>__<project>__attempt-<n>`. For example:
+
+```text
+test-results/failures/
+  clinic-doctors__should-save-every-field-when-user-creates-a-doctor__ui__attempt-1.png
+  clinic-doctors__should-save-every-field-when-user-creates-a-doctor__ui__attempt-1.txt
 ```
 
-Run the full regression suite:
-
-```bash
-npm run test:regression
-```
-
-Run tests in headed mode locally:
-
-```bash
-npx playwright test --headed
-```
-
-Type-check the project:
-
-```bash
-npm run typecheck
-```
-
-## How the Suite Is Organised
-
-- **`setup` project** (`tests/auth.setup.ts`) logs in once and saves the session to `playwright/.auth/user.json`.
-- **`chromium` project** (regression) depends on `setup` and reuses that session, so tests start already logged in.
-- **`smoke` project** runs tests tagged `@smoke` (`test('...', { tag: '@smoke' }, ...)`). The login smoke test starts logged out on purpose.
-- Tests that create data delete it afterwards, so beta does not fill up with test records.
-- Locally, browsers run headed with `slowMo` so you can watch; on CI they run headless at full speed, and `test.only` fails the build.
-
-## Page Object Model
-
-Page objects keep locators and page actions separate from test scenarios.
-
-For example, `LoginPage.ts` encapsulates the login page's locators and login actions. Tests use the page object to perform login rather than duplicating those actions in every test.
-
-## Continuous Integration
-
-GitHub Actions runs the Playwright suite when changes are pushed to, or a pull request targets, the configured branch.
-
-The workflow:
-
-1. Checks out the repository.
-2. Sets up Node.js.
-3. Installs dependencies.
-4. Installs Playwright browsers.
-5. Runs the smoke and regression jobs.
-6. Uploads available test reports and results.
-
-## Debugging Failures
-
-1. Open the repository's **Actions** tab.
-2. Select the failed workflow run.
-3. Inspect the failed job's logs.
-4. Download available artifacts, such as the HTML report, screenshots, and traces.
-5. Reproduce the failure locally and verify the fix.
-
-Each failed test also gets a plain-text summary (error, screenshot and trace paths) in `test-results/failures/`.
-
-To view a locally generated HTML report:
-
-```bash
-npx playwright show-report
-```
-
-## Current Scope
-
-The framework covers traditional UI automation fundamentals, including:
-
-- Page Object Model
-- Reusable test steps and assertions
-- Environment-based configuration
-- Smoke and regression test execution
-- CI execution and failure artifacts
-
-## Future Improvements
-
-- Expand cross-browser coverage.
-- Add API and UI integration tests.
-- Improve test data isolation.
-- Add more resilient tests for complex workflows.
-- Explore AI-assisted test generation and validation.
+The `.txt` file holds the error, the test's file and line, and the path of its trace. On CI these are inside the
+`*-test-results` artifact. Passing `--reporter=...` on the command line replaces the configured reporters, so
+leave it out if you want these files.

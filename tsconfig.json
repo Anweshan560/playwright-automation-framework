@@ -3,7 +3,9 @@
     "target": "ES2022",
     "module": "nodenext",
     "esModuleInterop": true,
+    "strict": true,
+    "noUnusedLocals": true,
     "types": ["node"]
   },
-  "include": ["tests", "pages", "utils", "reporters", "playwright.config.ts"]
+  "include": ["tests", "pages", "api", "fixtures", "config", "utils", "reporters", "playwright.config.ts"]
 }
