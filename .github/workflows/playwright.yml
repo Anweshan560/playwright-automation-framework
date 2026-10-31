@@ -80,6 +80,14 @@ jobs:
           TEST_USERNAME: ${{ secrets.SECRETU }}
           TEST_PASSWORD: ${{ secrets.SECRETP }}
 
+      # Changes the whole organization, so it runs after the regression suite, on its own.
+      - name: Run Settings → Organization tests
+        if: always()
+        run: npm run test:organization
+        env:
+          TEST_USERNAME: ${{ secrets.SECRETU }}
+          TEST_PASSWORD: ${{ secrets.SECRETP }}
+
       - name: Upload regression report
         if: always()
         uses: actions/upload-artifact@v4

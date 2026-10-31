@@ -18,8 +18,15 @@
     "test:doctors": "playwright test tests/clinic/doctors",
     "test:treatments": "playwright test tests/clinic/treatments",
     "test:departments": "playwright test tests/clinic/departments",
+    "test:appointments": "playwright test tests/clinic/appointments",
+    "test:billing": "playwright test tests/clinic/billing",
     "test:login": "playwright test tests/auth",
-    "test:headless": "cross-env HEADLESS=true playwright test"
+    "test:headless": "cross-env HEADLESS=true playwright test",
+    "test:settings": "playwright test tests/settings",
+    "test:members": "playwright test tests/settings/members",
+    "test:organization": "cross-env ORGANIZATION_TESTS=true playwright test --project=organization",
+    "test:contacts": "playwright test tests/contacts",
+    "test:all": "node scripts/test-all.mjs"
   },
   "keywords": [],
   "author": "",

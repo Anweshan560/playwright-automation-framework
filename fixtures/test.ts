@@ -1,14 +1,37 @@
 import { test as base } from '@playwright/test';
+import { AppointmentsApi, BillingApi } from '../api/AppointmentsApi';
 import { AuthApi } from '../api/AuthApi';
+import { ContactsApi, LifecyclesApi, SegmentsApi } from '../api/ContactsApi';
 import { DepartmentsApi } from '../api/DepartmentsApi';
 import { DoctorsApi } from '../api/DoctorsApi';
+import { MembersApi } from '../api/MembersApi';
+import { OrganizationApi } from '../api/OrganizationApi';
+import {
+  ClosingNotesApi,
+  SavedFilesApi,
+  SnippetsApi,
+  TagsApi,
+  TeamsApi,
+  WebsitesApi,
+} from '../api/SettingsApis';
 import type { HeadersProvider } from '../api/ResourceApi';
 import { TreatmentsApi } from '../api/TreatmentsApi';
 import { env } from '../config/env';
 import { LoginPage } from '../pages/auth/LoginPage';
+import { AppointmentsPage } from '../pages/clinic/AppointmentsPage';
+import { BillingPage } from '../pages/clinic/BillingPage';
+import { ContactsPage } from '../pages/contacts/ContactsPage';
 import { DepartmentsPage } from '../pages/clinic/DepartmentsPage';
 import { DoctorsPage } from '../pages/clinic/DoctorsPage';
 import { TreatmentsPage } from '../pages/clinic/TreatmentsPage';
+import { MembersPage } from '../pages/settings/MembersPage';
+import { OrganizationGeneralPage } from '../pages/settings/OrganizationGeneralPage';
+import { ClosingNotesPage } from '../pages/settings/ClosingNotesPage';
+import { SavedFilesPage } from '../pages/settings/SavedFilesPage';
+import { SnippetsPage } from '../pages/settings/SnippetsPage';
+import { TagsPage } from '../pages/settings/TagsPage';
+import { TeamsPage } from '../pages/settings/TeamsPage';
+import { WebsitesPage } from '../pages/settings/WebsitesPage';
 
 /** Collects clean-up actions and runs them after the test, even when the test failed. */
 export type Cleanup = {
@@ -20,11 +43,37 @@ type Fixtures = {
   doctorsPage: DoctorsPage;
   treatmentsPage: TreatmentsPage;
   departmentsPage: DepartmentsPage;
+  organizationPage: OrganizationGeneralPage;
+  membersPage: MembersPage;
+  websitesPage: WebsitesPage;
+  teamsPage: TeamsPage;
+  tagsPage: TagsPage;
+  closingNotesPage: ClosingNotesPage;
+  snippetsPage: SnippetsPage;
+  savedFilesPage: SavedFilesPage;
+  contactsPage: ContactsPage;
+  appointmentsPage: AppointmentsPage;
+  billingPage: BillingPage;
   /** Headers for the app's API: a fresh login token plus the tenant and workspace IDs. */
   apiHeaders: HeadersProvider;
   doctorsApi: DoctorsApi;
   treatmentsApi: TreatmentsApi;
   departmentsApi: DepartmentsApi;
+  organizationApi: OrganizationApi;
+  membersApi: MembersApi;
+  websitesApi: WebsitesApi;
+  teamsApi: TeamsApi;
+  tagsApi: TagsApi;
+  closingNotesApi: ClosingNotesApi;
+  snippetsApi: SnippetsApi;
+  savedFilesApi: SavedFilesApi;
+  contactsApi: ContactsApi;
+  segmentsApi: SegmentsApi;
+  lifecyclesApi: LifecyclesApi;
+  appointmentsApi: AppointmentsApi;
+  billingApi: BillingApi;
+  /** The workspace the test account works in (the same one the app sends as x-workspace-id). */
+  workspaceId: string;
   /** Clerk login calls. Needs no browser and no saved session. */
   authApi: AuthApi;
   cleanup: Cleanup;
@@ -49,6 +98,51 @@ export const test = base.extend<Fixtures>({
 
   departmentsPage: async ({ page }, use) => {
     await use(new DepartmentsPage(page));
+  },
+
+  organizationPage: async ({ page }, use) => {
+    await use(new OrganizationGeneralPage(page));
+  },
+
+  membersPage: async ({ page }, use) => {
+    await use(new MembersPage(page));
+  },
+
+  websitesPage: async ({ page }, use) => {
+    await use(new WebsitesPage(page));
+  },
+
+  // Teams live in a workspace, so the page needs its id for the API path it waits on.
+  teamsPage: async ({ page, workspaceId }, use) => {
+    await use(new TeamsPage(page, workspaceId));
+  },
+
+  tagsPage: async ({ page }, use) => {
+    await use(new TagsPage(page));
+  },
+
+  closingNotesPage: async ({ page }, use) => {
+    await use(new ClosingNotesPage(page));
+  },
+
+  snippetsPage: async ({ page }, use) => {
+    await use(new SnippetsPage(page));
+  },
+
+  savedFilesPage: async ({ page }, use) => {
+    await use(new SavedFilesPage(page));
+  },
+
+  contactsPage: async ({ page }, use) => {
+    await use(new ContactsPage(page));
+  },
+
+  appointmentsPage: async ({ page }, use) => {
+    await use(new AppointmentsPage(page));
+  },
+
+  billingPage: async ({ page }, use) => {
+    await use(new BillingPage(page));
   },
 
   apiHeaders: async ({ page }, use) => {
@@ -79,6 +173,62 @@ export const test = base.extend<Fixtures>({
 
   departmentsApi: async ({ request, apiHeaders }, use) => {
     await use(new DepartmentsApi(request, apiHeaders));
+  },
+
+  organizationApi: async ({ request, apiHeaders }, use) => {
+    await use(new OrganizationApi(request, apiHeaders));
+  },
+
+  membersApi: async ({ request, apiHeaders }, use) => {
+    await use(new MembersApi(request, apiHeaders));
+  },
+
+  websitesApi: async ({ request, apiHeaders }, use) => {
+    await use(new WebsitesApi(request, apiHeaders));
+  },
+
+  teamsApi: async ({ request, apiHeaders, workspaceId }, use) => {
+    await use(new TeamsApi(request, apiHeaders, workspaceId));
+  },
+
+  tagsApi: async ({ request, apiHeaders }, use) => {
+    await use(new TagsApi(request, apiHeaders));
+  },
+
+  closingNotesApi: async ({ request, apiHeaders }, use) => {
+    await use(new ClosingNotesApi(request, apiHeaders));
+  },
+
+  snippetsApi: async ({ request, apiHeaders }, use) => {
+    await use(new SnippetsApi(request, apiHeaders));
+  },
+
+  savedFilesApi: async ({ request, apiHeaders }, use) => {
+    await use(new SavedFilesApi(request, apiHeaders));
+  },
+
+  contactsApi: async ({ request, apiHeaders }, use) => {
+    await use(new ContactsApi(request, apiHeaders));
+  },
+
+  segmentsApi: async ({ request, apiHeaders }, use) => {
+    await use(new SegmentsApi(request, apiHeaders));
+  },
+
+  lifecyclesApi: async ({ request, apiHeaders }, use) => {
+    await use(new LifecyclesApi(request, apiHeaders));
+  },
+
+  appointmentsApi: async ({ request, apiHeaders }, use) => {
+    await use(new AppointmentsApi(request, apiHeaders));
+  },
+
+  billingApi: async ({ request, apiHeaders }, use) => {
+    await use(new BillingApi(request, apiHeaders));
+  },
+
+  workspaceId: async ({ apiHeaders }, use) => {
+    await use((await apiHeaders())['x-workspace-id']);
   },
 
   authApi: async ({ request }, use) => {

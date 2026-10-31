@@ -25,38 +25,60 @@ Everything else in `.env.example` is optional and defaults to the beta environme
 
 **3. Run:**
 
-| What                                   | Command                                         |
-| -------------------------------------- | ----------------------------------------------- |
-| Everything                             | `npm test`                                      |
-| Smoke test only (is the app up?)       | `npm run test:smoke`                            |
-| UI tests only                          | `npm run test:ui`                               |
-| API tests only                         | `npm run test:api`                              |
-| One file                               | `npx playwright test tests/ui/doctors.spec.ts`  |
-| One test, by name                      | `npx playwright test -g "when user deletes it"` |
-| Headless (no browser window)           | `npm run test:headless`                         |
-| Headed (watch the browser)             | `npm run test:headed`                           |
-| UI mode (pick, re-run and debug tests) | `npm run test:debug`                            |
-| Type-check / format                    | `npm run typecheck` / `npm run format`          |
+| What                                          | Command                                                           |
+| --------------------------------------------- | ----------------------------------------------------------------- |
+| Everything, including Settings → Organization | `npm run test:all`                                                |
+| Everything except Settings → Organization     | `npm test`                                                        |
+| Smoke test only (is the app up?)              | `npm run test:smoke`                                              |
+| UI tests only / API tests only                | `npm run test:ui` / `npm run test:api`                            |
+| Login                                         | `npm run test:login`                                              |
+| All of Clinic                                 | `npm run test:clinic`                                             |
+| One Clinic feature                            | `npm run test:doctors` (or `test:treatments`, `test:departments`) |
+| Clinic → Appointments / Billing               | `npm run test:appointments` / `npm run test:billing`              |
+| All of Settings (except Organization)         | `npm run test:settings`                                           |
+| Settings → Members                            | `npm run test:members`                                            |
+| Settings → Organization (runs on its own)     | `npm run test:organization`                                       |
+| Contacts                                      | `npm run test:contacts`                                           |
+| One file                                      | `npx playwright test tests/clinic/doctors/doctors.spec.ts`        |
+| One test, by name                             | `npx playwright test -g "when user deletes it"`                   |
+| Headless (no browser window)                  | `npm run test:headless`                                           |
+| Headed (watch the browser)                    | `npm run test:headed`                                             |
+| UI mode (pick, re-run and debug tests)        | `npm run test:debug`                                              |
+| Type-check / format                           | `npm run typecheck` / `npm run format`                            |
 
 Locally the browser window is visible by default. `test:headless` hides it, and accepts the same
 options: `npm run test:headless -- tests/clinic/doctors`. You can also set `HEADLESS=true` in `.env`.
+
+**Why Settings → Organization runs on its own:** those tests change the real organization, and some
+changes affect the whole app (switching the organization type to E-commerce hides the Clinic menu).
+They run only through `npm run test:organization` or `npm run test:all`, one test at a time, and every
+test restores the original values. In any other run they show as _skipped_, with that reason.
 
 Every run starts with `tests/setup/auth.setup.ts`, which logs in once and saves the session for the other tests.
 
 ## Folder structure
 
-| Folder         | What's in it                                                                                   |
-| -------------- | ---------------------------------------------------------------------------------------------- |
-| `tests/ui/`    | Browser tests: what a user does and sees.                                                      |
-| `tests/api/`   | API tests: status codes, response bodies and times, error cases.                               |
-| `tests/setup/` | Logs in once before the other tests and saves the session.                                     |
-| `pages/`       | Page objects: _how_ to use each page (locators and actions), so tests only say _what_ happens. |
-| `api/`         | API clients: one small class per endpoint group, plus the field-name mapping to the UI forms.  |
-| `fixtures/`    | The `test` that every spec imports, ready-made with page objects, API clients and cleanup.     |
-| `config/`      | `env.ts`: the only place that reads `.env` (URLs, credentials, limits).                        |
-| `utils/`       | Helpers: Faker test data, network recording/mocking, response timing.                          |
-| `reporters/`   | Writes a plain-text summary of every failed test to `test-results/failures/`.                  |
-| `.github/`     | CI: the smoke test first, then the full suite, on every push and pull request.                 |
+| Folder                    | What's in it                                                                                  |
+| ------------------------- | --------------------------------------------------------------------------------------------- |
+| `tests/auth/`             | Login: UI (`login.spec.ts`) and API (`login.api.spec.ts`).                                    |
+| `tests/clinic/<feature>/` | Doctors, Treatments, Departments, Appointments, Billing: UI and API tests side by side.       |
+| `tests/settings/<page>/`  | Settings → Organization (General) and Members: UI and API tests side by side.                 |
+| `tests/contacts/`         | Contacts: list, create, row actions, side panel and segments (UI), and the contacts API.      |
+| `tests/setup/`            | Logs in once before the other tests and saves the session.                                    |
+| `pages/`                  | Page objects (`auth/`, `clinic/`, `settings/`, `contacts/`): _how_ to use each page.          |
+| `api/`                    | API clients: one small class per endpoint group, plus the field-name mapping to the UI forms. |
+| `fixtures/`               | The `test` that every spec imports, ready-made with page objects, API clients and cleanup.    |
+| `config/`                 | `env.ts`: the only place that reads `.env` (URLs, credentials, limits).                       |
+| `utils/`                  | Helpers: Faker test data, network recording/mocking, response timing.                         |
+| `reporters/`              | Writes a screenshot and plain-text summary of every failed test to `test-results/failures/`.  |
+| `scripts/`                | `test-all.mjs`: runs the suite, then Settings → Organization on its own.                      |
+| `.github/`                | CI: smoke test, then the full suite, then Settings → Organization, on every push and PR.      |
+
+File names decide how a test runs: `*.api.spec.ts` runs in the `api` project, other `*.spec.ts` files in `ui`.
+
+**Known app issues are marked with `test.fail()`.** Such a test checks the behaviour we expect, and its
+reason says what the app does instead and when it was seen. It passes while the issue is there, and fails
+(on purpose) once the app is fixed: then delete the `test.fail()` line.
 
 ## Adding a test
 

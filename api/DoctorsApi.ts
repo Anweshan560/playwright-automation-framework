@@ -10,13 +10,16 @@ export type DoctorPayload = {
   profileUrl?: string;
   /** The form's "ID in your EMR". */
   externalId?: string;
+  /** Treatments this doctor offers; the New appointment dialog lists only these. */
+  treatmentIds?: string[];
 };
 
 /** A doctor as the API returns it (only the fields the tests use). */
-export type Doctor = Required<DoctorPayload> & {
+export type Doctor = Required<Omit<DoctorPayload, 'treatmentIds'>> & {
   id: string;
   createdAt: string;
   updatedAt: string;
+  treatments: { id: string; name: string }[];
 };
 
 /** Convert form test data to the API's field names. */

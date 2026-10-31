@@ -18,6 +18,12 @@ export const env = {
    * room for network noise so the check only fails on a real slowdown.
    */
   apiResponseBudgetMs: Number(process.env.API_RESPONSE_BUDGET_MS) || 3000,
+  /**
+   * Settings → Organization tests change the whole organization (e.g. switching its type hides
+   * the Clinic menu), so they must never run alongside other tests. They run only when this is
+   * "true", which `npm run test:organization` sets.
+   */
+  runOrganizationTests: process.env.ORGANIZATION_TESTS === 'true',
 } as const;
 
 /** Where tests/setup/auth.setup.ts saves the logged-in browser session. */

@@ -112,6 +112,11 @@ function uniqueSuffix(): string {
   return faker.string.numeric({ length: 6, allowLeadingZeros: false });
 }
 
+/** Any one of `items`, picked at random. */
+export function pickRandom<T>(items: readonly T[]): T {
+  return faker.helpers.arrayElement(items);
+}
+
 /** A realistic doctor with a unique name. */
 export function buildDoctor(): DoctorData {
   return {
@@ -163,6 +168,253 @@ export function otherColorThan(colorName: DepartmentColorName): DepartmentColorN
   return faker.helpers.arrayElement(others);
 }
 
+// ---------------------------------------------------------------------------------------------
+// Settings → Organization → General
+// ---------------------------------------------------------------------------------------------
+
+/** A few of the Country dropdown's options: what the user picks, and the code the API stores. */
+export const COUNTRIES = [
+  { name: 'United Arab Emirates', code: 'AE' },
+  { name: 'Nepal', code: 'NP' },
+  { name: 'India', code: 'IN' },
+  { name: 'Australia', code: 'AU' },
+  { name: 'Canada', code: 'CA' },
+  { name: 'Germany', code: 'DE' },
+] as const;
+
+/** A few of the Timezone dropdown's options: the label the user sees, and the IANA id the API stores. */
+export const TIMEZONES = [
+  { label: 'Dubai (UTC+4)', id: 'Asia/Dubai' },
+  { label: 'Kathmandu (UTC+5:45)', id: 'Asia/Kathmandu' },
+  { label: 'London (UTC+0)', id: 'Europe/London' },
+  { label: 'Paris (UTC+1)', id: 'Europe/Paris' },
+  { label: 'Eastern Time (UTC-5)', id: 'America/New_York' },
+] as const;
+
+/** Both Organization type options: the label the user sees, and the value the API stores. */
+export const ORGANIZATION_TYPES = [
+  { label: 'Clinic / Healthcare', value: 'clinic' },
+  { label: 'E-commerce / Retail', value: 'ecommerce' },
+] as const;
+
+export type Country = (typeof COUNTRIES)[number];
+export type Timezone = (typeof TIMEZONES)[number];
+export type OrganizationType = (typeof ORGANIZATION_TYPES)[number];
+
+/** Everything on Organization → General that can be changed. */
+export type OrganizationProfile = {
+  name: string;
+  website: string;
+  /** Digits only, as typed. The phone's own country code (+977) is not changed by the tests. */
+  phoneDigits: string;
+  country: Country;
+  timezone: Timezone;
+  type: OrganizationType;
+};
+
+/** What the organization currently has, in API terms, so new values can be chosen to differ. */
+export type CurrentOrganization = { region: string; timezone: string; type: string };
+
+/** Any item except the one `isCurrent` matches, so an update always changes the value. */
+function pickOther<T>(items: readonly T[], isCurrent: (item: T) => boolean): T {
+  return faker.helpers.arrayElement(items.filter((item) => !isCurrent(item)));
+}
+
+/** New organization details where every field differs from `current`. */
+export function buildOrganizationProfile(current: CurrentOrganization): OrganizationProfile {
+  return {
+    name: `${faker.company.name()} ${uniqueSuffix()}`,
+    website: `https://www.${faker.internet.domainWord()}-${uniqueSuffix()}.com`,
+    // A 10-digit mobile number starting with 98, the format of the account's existing number.
+    phoneDigits: `98${faker.string.numeric(8)}`,
+    country: pickOther(COUNTRIES, (country) => country.code === current.region),
+    timezone: pickOther(TIMEZONES, (timezone) => timezone.id === current.timezone),
+    type: pickOther(ORGANIZATION_TYPES, (type) => type.value === current.type),
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Settings → Organization → Members
+// ---------------------------------------------------------------------------------------------
+
+/** Organization roles in the invite dialog, and the value the API stores. */
+export const ORGANIZATION_ROLES = {
+  'Org Admin': 'organization:admin',
+  'Org Member': 'organization:member',
+} as const;
+
+/** Workspace roles in the invite dialog, and the value the API stores. */
+export const WORKSPACE_ROLES = {
+  Admin: 'workspace:admin',
+  Member: 'workspace:member',
+  Agent: 'workspace:agent',
+  Marketing: 'workspace:marketing',
+  Finance: 'workspace:finance',
+} as const;
+
+export type OrganizationRoleName = keyof typeof ORGANIZATION_ROLES;
+export type WorkspaceRoleName = keyof typeof WORKSPACE_ROLES;
+
+/** A person to invite, as typed into the Invite user dialog. */
+export type Invitee = {
+  firstName: string;
+  lastName: string;
+  /** Always on example.com, so no real person ever receives the invitation email. */
+  email: string;
+  organizationRole: OrganizationRoleName;
+  workspaceRole: WorkspaceRoleName;
+};
+
+/**
+ * A realistic invitee. Always an Org Member, never an admin, and never a workspace Admin, so a
+ * test invitation can't grant broad access even before it is revoked.
+ */
+export function buildInvitee(): Invitee {
+  const firstName = faker.person.firstName();
+  const lastName = faker.person.lastName();
+  return {
+    firstName,
+    lastName,
+    email: `qa.${firstName}.${lastName}.${uniqueSuffix()}@example.com`
+      .toLowerCase()
+      .replace(/[^a-z0-9.@]/g, ''),
+    organizationRole: 'Org Member',
+    workspaceRole: faker.helpers.arrayElement(['Member', 'Agent', 'Marketing', 'Finance'] as const),
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Settings pages with a table and add/edit dialogs
+// ---------------------------------------------------------------------------------------------
+
+/** Settings → Workspace → Websites. */
+export type WebsiteData = { domain: string; name: string };
+
+/** A website on example.com, a domain reserved for testing, so it never points at a real site. */
+export function buildWebsite(): WebsiteData {
+  return {
+    domain: `qa-${faker.internet.domainWord()}-${uniqueSuffix()}.example.com`,
+    name: `${faker.company.name()} Website ${uniqueSuffix()}`,
+  };
+}
+
+/** The colour swatches in the team dialog (each button is named "Select color <hex>"). */
+export const TEAM_COLORS = [
+  '#6366f1',
+  '#0ea5e9',
+  '#10b981',
+  '#f59e0b',
+  '#ef4444',
+  '#ec4899',
+  '#8b5cf6',
+  '#14b8a6',
+] as const;
+
+/** The team dialog's auto-assign strategies: the label the user sees, and the value the API stores. */
+export const TEAM_STRATEGIES = [
+  { label: "Who's online", value: 'online' },
+  { label: 'Least assigned', value: 'least_assigned' },
+  { label: 'Round robin', value: 'round_robin' },
+] as const;
+
+/** Settings → Workspace → Teams. */
+export type TeamData = {
+  name: string;
+  color: (typeof TEAM_COLORS)[number];
+  strategy: (typeof TEAM_STRATEGIES)[number];
+};
+
+/** A team; pass the current one to get a different colour and strategy. */
+export function buildTeam(current?: TeamData): TeamData {
+  return {
+    name: `${faker.commerce.department()} Team ${uniqueSuffix()}`,
+    color: pickOther(TEAM_COLORS, (color) => color === current?.color),
+    strategy: pickOther(TEAM_STRATEGIES, (strategy) => strategy.value === current?.strategy.value),
+  };
+}
+
+/** The tag dialog's colour presets and the hex code each one sets. */
+export const TAG_COLORS = {
+  Red: '#ef4444',
+  Orange: '#f97316',
+  Yellow: '#eab308',
+  Green: '#22c55e',
+  Teal: '#14b8a6',
+  Blue: '#3b82f6',
+  Purple: '#a855f7',
+  Pink: '#ec4899',
+  Gray: '#6b7280',
+} as const;
+
+export type TagColorName = keyof typeof TAG_COLORS;
+
+/** Settings → Inbox → Tags. */
+export type TagData = { name: string; colorName: TagColorName };
+
+/** A tag; pass the current one to get a different colour. */
+export function buildTag(current?: TagData): TagData {
+  const colorNames = Object.keys(TAG_COLORS) as TagColorName[];
+  return {
+    name: `qa-${faker.word.adjective()}-${uniqueSuffix()}`,
+    colorName: pickOther(colorNames, (name) => name === current?.colorName),
+  };
+}
+
+/** Settings → Inbox → Closing Notes. */
+export type ClosingNoteData = { category: string; summary: string };
+
+/** A closing note with a realistic reason. */
+export function buildClosingNote(): ClosingNoteData {
+  const reason = faker.helpers.arrayElement([
+    'Appointment booked',
+    'Question answered',
+    'Price enquiry',
+    'Follow-up scheduled',
+    'Not interested',
+  ]);
+  return {
+    category: `${reason} ${uniqueSuffix()}`,
+    summary: `${reason}. ${faker.helpers.arrayElement(['Patient was happy with the answer.', 'Agent will check back next week.', 'No further action needed.'])}`,
+  };
+}
+
+/** Settings → Content → Snippets. */
+export type SnippetData = { name: string; content: string; visibility: 'Everyone' | 'Only me' };
+
+/** A saved reply; pass the current one to get the other visibility. */
+export function buildSnippet(current?: SnippetData): SnippetData {
+  const topic = faker.helpers.arrayElement(['Opening hours', 'Parking', 'Booking', 'Prices', 'Aftercare']);
+  return {
+    name: `${topic} reply ${uniqueSuffix()}`,
+    content: `Hi! ${faker.helpers.arrayElement([
+      'We are open from 9am to 6pm, Monday to Saturday.',
+      'Free parking is available behind the clinic.',
+      'You can book online or reply here with a time that suits you.',
+      'Our price list is attached; let us know if you have questions.',
+    ])}`,
+    visibility:
+      current?.visibility === 'Everyone'
+        ? 'Only me'
+        : current
+          ? 'Everyone'
+          : faker.helpers.arrayElement(['Everyone', 'Only me']),
+  };
+}
+
+/** Settings → Content → Files. The uploaded file is always tests/assets/sample.png. */
+export type SavedFileData = { name: string };
+
+/** A saved file with a realistic name. */
+export function buildSavedFile(): SavedFileData {
+  const kind = faker.helpers.arrayElement([
+    'Price list',
+    'Consent form',
+    'Aftercare guide',
+    'Clinic brochure',
+  ]);
+  return { name: `${kind} ${uniqueSuffix()}` };
+}
+
 /** An email on example.com, a domain reserved for testing, so it can never be a real account. */
 export function buildUnknownEmail(): string {
   return faker.internet.email({ provider: 'example.com' }).toLowerCase();
@@ -171,4 +423,111 @@ export function buildUnknownEmail(): string {
 /** A random password that will not match any real account's password. */
 export function buildWrongPassword(): string {
   return faker.internet.password({ length: 14 });
+}
+
+// ---------------------------------------------------------------------------------------------
+// Contacts
+// ---------------------------------------------------------------------------------------------
+
+/** A contact's text fields, as typed into the Create contact dialog. */
+export type ContactData = {
+  firstName: string;
+  lastName: string;
+  /** A UAE mobile number in international format: the dialog's phone field accepts it as typed. */
+  phone: string;
+  email: string;
+  address: string;
+};
+
+/**
+ * A realistic contact. The last name ends with a unique number, so searching for it finds this
+ * contact only. Options:
+ * - `batch`: give several contacts the same number (find them all with one search); each still
+ *   gets its own letter, so their names differ.
+ * - `uniqueFirstName`: put the number in the first name too, for filters on the first name.
+ */
+export function buildContact(
+  options: { batch?: { tag: string; index: number }; uniqueFirstName?: boolean } = {},
+): ContactData {
+  const { batch, uniqueFirstName = false } = options;
+  const firstName = faker.person.firstName();
+  const lastName = faker.person.lastName();
+  const suffix = batch ? `${batch.tag}${String.fromCharCode(65 + batch.index)}` : uniqueSuffix();
+  return {
+    firstName: uniqueFirstName ? `${firstName} ${suffix}` : firstName,
+    lastName: `${lastName} ${suffix}`,
+    // 50 is a UAE mobile prefix; the rest is random. Shorter numbers fail the dialog's check.
+    phone: `+97150${faker.string.numeric(7)}`,
+    email: `qa.${firstName}.${lastName}.${suffix}@example.com`.toLowerCase().replace(/[^a-z0-9.@]/g, ''),
+    address: faker.location.streetAddress(),
+  };
+}
+
+/** `count` contacts that share one search tag; returns the tag too. */
+export function buildContactBatch(count: number): { tag: string; contacts: ContactData[] } {
+  const tag = uniqueSuffix();
+  return {
+    tag,
+    contacts: Array.from({ length: count }, (_, index) => buildContact({ batch: { tag, index } })),
+  };
+}
+
+/** A name for a test segment, unique so parallel runs never clash. */
+export function buildSegmentName(): string {
+  return `QA ${faker.helpers.arrayElement(['Warm leads', 'Follow-up list', 'VIP patients', 'New enquiries'])} ${uniqueSuffix()}`;
+}
+
+/** A short, realistic note an agent might leave on a contact. */
+export function buildContactNote(): string {
+  return `${faker.helpers.arrayElement([
+    'Called back, prefers a morning appointment.',
+    'Asked about prices for a second session.',
+    'Will confirm the booking after checking with family.',
+    'Interested in the package offer.',
+  ])} (${uniqueSuffix()})`;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Clinic → Appointments and Billing
+// ---------------------------------------------------------------------------------------------
+
+/** A patient as typed into the New appointment dialog. Booking a new patient creates a contact. */
+export type PatientData = { firstName: string; lastName: string; phone: string };
+
+/** A realistic patient whose last name ends with a unique number, like buildContact(). */
+export function buildPatient(): PatientData {
+  const { firstName, lastName, phone } = buildContact();
+  return { firstName, lastName, phone };
+}
+
+/**
+ * The next day the clinic takes bookings, at least `daysAhead` days from now, at `hour`:`minute`
+ * local time. The test workspace is closed on Saturdays and Sundays: the API answers
+ * 400 "Clinic is closed on this day" for those.
+ */
+export function nextClinicDay(hour = 10, minute = 0, daysAhead = 1): Date {
+  const day = new Date();
+  day.setDate(day.getDate() + daysAhead);
+  while (day.getDay() === 0 || day.getDay() === 6) day.setDate(day.getDate() + 1);
+  day.setHours(hour, minute, 0, 0);
+  return day;
+}
+
+/** The next Saturday at 10:00 local time: a day the clinic is closed. */
+export function nextClosedDay(): Date {
+  const day = new Date();
+  day.setDate(day.getDate() + ((6 - day.getDay() + 7) % 7 || 7));
+  day.setHours(10, 0, 0, 0);
+  return day;
+}
+
+/** "2026-11-02": the calendar's ?date= value for `day` (local time). */
+export function toDateParam(day: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${day.getFullYear()}-${pad(day.getMonth() + 1)}-${pad(day.getDate())}`;
+}
+
+/** An amount paid at a visit, in whole AED. */
+export function buildPaymentAmount(): number {
+  return faker.number.int({ min: 100, max: 2000 });
 }

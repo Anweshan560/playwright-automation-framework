@@ -7,28 +7,48 @@ export const ENDPOINTS = {
   departments: '/v1/clinics/departments',
   doctors: '/v1/clinics/doctors',
   treatments: '/v1/clinics/treatments',
+  appointments: '/v1/clinics/appointments',
+  /** Billing: the ledger; `/patients` and `/review` hang off it. */
+  billing: '/v1/clinics/billing',
+  /** A patient's billing: `/v1/clinics/contacts/<id>/billing` and `/advances`. */
+  clinicContacts: '/v1/clinics/contacts',
+  websites: '/v1/websites',
+  tags: '/v1/tags',
+  closingNotes: '/v1/closing-notes',
+  snippets: '/v1/snippets',
+  savedFiles: '/v1/saved-files',
+  contacts: '/v1/contacts',
+  segments: '/v1/segments',
+  lifecycles: '/v1/lifecycles',
+  /** Teams belong to a workspace. */
+  teams: (workspaceId: string) => `/v1/workspaces/${workspaceId}/teams`,
 } as const;
 
 /** Returns the auth + workspace headers. Called per request because login tokens last only 60s. */
 export type HeadersProvider = () => Promise<Record<string, string>>;
 
 /**
- * List / get / create / delete for one REST resource of the app's API.
+ * List / get / create / update / delete for one REST resource of the app's API.
  * The plain methods return the raw response, so tests can check status codes, including errors,
  * and response times through responseTimeMs().
  * The `...Record` helpers are for test setup and cleanup, and throw if the API misbehaves.
  */
 export class ResourceApi<TPayload extends object, TRecord extends { id: string }> {
   constructor(
-    private readonly request: APIRequestContext,
-    private readonly headers: HeadersProvider,
-    private readonly path: string,
+    protected readonly request: APIRequestContext,
+    protected readonly headers: HeadersProvider,
+    /** API path of the list, e.g. "/v1/websites". */
+    readonly path: string,
+    /** Most endpoints update with PATCH; a few (e.g. tags) use PUT. */
+    private readonly updateMethod: 'PATCH' | 'PUT' = 'PATCH',
   ) {}
 
-  /** GET the whole list. */
-  async list(): Promise<APIResponse> {
+  /** GET the list; paginated endpoints (e.g. websites) take a page number. */
+  async list(page?: number): Promise<APIResponse> {
     const headers = await this.headers();
-    return sendTimed(() => this.request.get(this.url(), { headers }));
+    // Page 1 is the default; leave it off so unpaginated endpoints get the same request as ever.
+    const params = page && page > 1 ? { page } : undefined;
+    return sendTimed(() => this.request.get(this.url(), { headers, params }));
   }
 
   /** GET one record by id. */
@@ -43,16 +63,36 @@ export class ResourceApi<TPayload extends object, TRecord extends { id: string }
     return sendTimed(() => this.request.post(this.url(), { headers, data: payload }));
   }
 
+  /** Update a record by id (PATCH or PUT, depending on the endpoint). */
+  async update(id: string, payload: Partial<TPayload>): Promise<APIResponse> {
+    const headers = await this.headers();
+    return sendTimed(() =>
+      this.request.fetch(this.url(id), { method: this.updateMethod, headers, data: payload }),
+    );
+  }
+
   /** DELETE a record by id. */
   async delete(id: string): Promise<APIResponse> {
     const headers = await this.headers();
     return sendTimed(() => this.request.delete(this.url(id), { headers }));
   }
 
-  /** The records in the list response. */
+  /**
+   * Every record in the list. Most endpoints answer with a plain array; paginated ones
+   * (e.g. websites, 10 per page) answer `{ result, meta: { nextPage } }`, so walk every page.
+   */
   async listRecords(): Promise<TRecord[]> {
-    const response = await this.list();
-    return (await response.json()).data;
+    const records: TRecord[] = [];
+    let page: number | null = 1;
+    while (page) {
+      const data: TRecord[] | { result: TRecord[]; meta: { nextPage: number | null } } = (
+        await (await this.list(page)).json()
+      ).data;
+      if (Array.isArray(data)) return data;
+      records.push(...data.result);
+      page = data.meta.nextPage;
+    }
+    return records;
   }
 
   /** Create a record for test setup and return it. Throws unless the API answers 201. */
@@ -66,15 +106,18 @@ export class ResourceApi<TPayload extends object, TRecord extends { id: string }
     return (await response.json()).data;
   }
 
-  /** Delete a record during cleanup. Passes if it was deleted now or was already gone. */
+  /**
+   * Delete a record during cleanup. Passes if it was deleted now or was already gone.
+   * A successful delete answers 200 on most endpoints and 204 on some (e.g. websites).
+   */
   async deleteIfExists(id: string): Promise<void> {
     const response = await this.delete(id);
-    if (response.status() !== 200 && response.status() !== 404) {
+    if (!response.ok() && response.status() !== 404) {
       throw new Error(`DELETE ${this.path}/${id} returned ${response.status()}`);
     }
   }
 
-  private url(id?: string): string {
+  protected url(id?: string): string {
     return `${env.apiUrl}${this.path}${id ? `/${id}` : ''}`;
   }
 }

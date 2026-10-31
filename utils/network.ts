@@ -26,7 +26,7 @@ export function waitForApiResponse(
  * Start recording the page's calls to one API endpoint.
  * @returns a list that fills up as matching requests are sent, e.g. to prove none were.
  */
-export function recordApiCalls(page: Page, method: HttpMethod, apiPath: string): string[] {
+export function recordApiCalls(page: Page, method: HttpMethod, apiPath: string | RegExp): string[] {
   const calls: string[] = [];
   page.on('request', (request) => {
     if (isApiCall(request, method, apiPath)) calls.push(request.url());
