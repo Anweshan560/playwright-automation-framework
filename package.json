@@ -24,6 +24,7 @@
     "test:headless": "cross-env HEADLESS=true playwright test",
     "test:settings": "playwright test tests/settings",
     "test:members": "playwright test tests/settings/members",
+    "test:roles": "playwright test tests/settings/roles tests/settings/workspace-users",
     "test:contact-fields": "playwright test tests/settings/contact-fields",
     "test:outcome-reasons": "playwright test tests/settings/outcome-reasons",
     "test:wrap-up": "playwright test --project=workspace-settings",

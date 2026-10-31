@@ -21,6 +21,7 @@ import {
 import type { HeadersProvider } from '../api/ResourceApi';
 import { TreatmentsApi } from '../api/TreatmentsApi';
 import { AssignmentApi, SlasApi, WorkspaceApi } from '../api/WorkspaceApi';
+import { RolesApi, WorkspaceUsersApi } from '../api/RolesApi';
 import { WrapUpApi } from '../api/WrapUpApi';
 import { env } from '../config/env';
 import { LoginPage } from '../pages/auth/LoginPage';
@@ -48,6 +49,8 @@ import { HoursPage } from '../pages/settings/HoursPage';
 import { LifecycleStagesPage } from '../pages/settings/LifecycleStagesPage';
 import { SlaPage } from '../pages/settings/SlaPage';
 import { WorkspaceGeneralPage } from '../pages/settings/WorkspaceGeneralPage';
+import { RolesPage } from '../pages/settings/RolesPage';
+import { WorkspaceUsersPage } from '../pages/settings/WorkspaceUsersPage';
 import { WebsitesPage } from '../pages/settings/WebsitesPage';
 
 /** Collects clean-up actions and runs them after the test, even when the test failed. */
@@ -104,6 +107,10 @@ type Fixtures = {
   workspaceApi: WorkspaceApi;
   slasApi: SlasApi;
   assignmentApi: AssignmentApi;
+  rolesPage: RolesPage;
+  rolesApi: RolesApi;
+  workspaceUsersPage: WorkspaceUsersPage;
+  workspaceUsersApi: WorkspaceUsersApi;
   customViewsApi: CustomViewsApi;
   segmentsApi: SegmentsApi;
   lifecyclesApi: LifecyclesApi;
@@ -334,6 +341,22 @@ export const test = base.extend<Fixtures>({
 
   assignmentApi: async ({ request, apiHeaders }, use) => {
     await use(new AssignmentApi(request, apiHeaders));
+  },
+
+  rolesPage: async ({ page, workspaceId }, use) => {
+    await use(new RolesPage(page, workspaceId));
+  },
+
+  rolesApi: async ({ request, apiHeaders, workspaceId }, use) => {
+    await use(new RolesApi(request, apiHeaders, workspaceId));
+  },
+
+  workspaceUsersPage: async ({ page, workspaceId }, use) => {
+    await use(new WorkspaceUsersPage(page, workspaceId));
+  },
+
+  workspaceUsersApi: async ({ request, apiHeaders, workspaceId }, use) => {
+    await use(new WorkspaceUsersApi(request, apiHeaders, workspaceId));
   },
 
   savedViewsPage: async ({ page, workspaceId }, use) => {

@@ -38,6 +38,7 @@ Everything else in `.env.example` is optional and defaults to the beta environme
 | Clinic → Appointments / Billing                            | `npm run test:appointments` / `npm run test:billing`              |
 | All of Settings (except the exclusive tests)               | `npm run test:settings`                                           |
 | Settings → Members                                         | `npm run test:members`                                            |
+| Settings → Roles and Workspace Members                     | `npm run test:roles`                                              |
 | Settings → Contact Fields / Outcome Reasons                | `npm run test:contact-fields` / `npm run test:outcome-reasons`    |
 | Settings → Wrap-Up (one test at a time)                    | `npm run test:wrap-up`                                            |
 | Settings → API Keys and Webhooks                           | `npm run test:api-keys`                                           |

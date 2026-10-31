@@ -711,3 +711,57 @@ export function buildLifecycleStage(): { name: string; emoji: string } {
     emoji: faker.helpers.arrayElement(['🧪', '📅', '💬']),
   };
 }
+
+// --- Sprint 4: Roles & access -----------------------------------------------------------------
+
+/** The role editor's "Contacts they see" options and the value the API stores for each. */
+export const CONTACT_VISIBILITY = {
+  'All contacts': 'all',
+  "Their teams' contacts": 'teams',
+  'Only assigned to them': 'assigned',
+} as const;
+
+/**
+ * Permissions Agent doesn't have (Member has them all), so ticking one on a role started from Agent
+ * is always a change: where the editor shows it (area and label) and its API key.
+ */
+export const EXTRA_ROLE_PERMISSIONS = [
+  { area: 'Contacts', label: 'Delete', key: 'contacts.delete' },
+  { area: 'Contacts', label: 'Export', key: 'contacts.export' },
+  { area: 'Conversations', label: 'Delete', key: 'conversations.delete' },
+  { area: 'Appointments', label: 'Delete', key: 'appointments.delete' },
+] as const;
+
+/** A custom role, as built in Settings → Roles → New role. */
+export type RoleData = {
+  name: string;
+  description: string;
+  /** The built-in role the editor starts from: Agent, so the extra permissions are additions. */
+  startFrom: 'Agent';
+  contactVisibility: keyof typeof CONTACT_VISIBILITY;
+  /** Permissions ticked on top of the starting role's. */
+  extraPermissions: (typeof EXTRA_ROLE_PERMISSIONS)[number][];
+};
+
+/** A custom role; pass the current one to get a different name, description and contact access. */
+export function buildRole(current?: RoleData): RoleData {
+  const visibilities = Object.keys(CONTACT_VISIBILITY) as RoleData['contactVisibility'][];
+  return {
+    name: `qa-${faker.helpers.arrayElement(['Front desk', 'Night shift', 'Billing desk'])} ${uniqueSuffix()}`,
+    description: `For ${faker.helpers.arrayElement(['receptionists', 'weekend cover', 'the billing team'])}.`,
+    startFrom: 'Agent',
+    contactVisibility: pickOther(visibilities, (visibility) => visibility === current?.contactVisibility),
+    extraPermissions: faker.helpers.arrayElements(EXTRA_ROLE_PERMISSIONS, { min: 1, max: 2 }),
+  };
+}
+
+/** Someone to add to the workspace, on example.com so no invitation email reaches anyone. */
+export function buildWorkspaceInvitee(): { firstName: string; lastName: string; email: string } {
+  const firstName = faker.person.firstName();
+  const lastName = `${faker.person.lastName()} ${uniqueSuffix()}`;
+  return {
+    firstName,
+    lastName,
+    email: `qa-${uniqueSuffix()}-${faker.string.alpha(5).toLowerCase()}@example.com`,
+  };
+}
