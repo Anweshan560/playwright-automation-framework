@@ -531,3 +531,151 @@ export function toDateParam(day: Date): string {
 export function buildPaymentAmount(): number {
   return faker.number.int({ min: 100, max: 2000 });
 }
+
+// --- Sprint 2: Settings CRUD ------------------------------------------------------------------
+
+/** The contact field dialog's types and the value the API stores for each. */
+export const CONTACT_FIELD_TYPES = {
+  Text: 'string',
+  Number: 'number',
+  Choice: 'select',
+  Phone: 'phone',
+} as const;
+
+export type ContactFieldTypeName = keyof typeof CONTACT_FIELD_TYPES;
+
+/** Settings → Workspace → Contact Fields, as typed into the New contact field dialog. */
+export type ContactFieldData = {
+  name: string;
+  /** "Storage key": fixed once the field exists. */
+  key: string;
+  type: ContactFieldTypeName;
+  /** Only for Choice fields: one option per line in the dialog. */
+  options: string[];
+  placeholder: string;
+  /** "Show this field on contacts". */
+  showOnContacts: boolean;
+};
+
+/**
+ * A contact field; pass the current one to get a different name, placeholder and visibility.
+ * The key and type stay the same, as the app doesn't let them change.
+ */
+export function buildContactField(
+  type: ContactFieldTypeName = 'Text',
+  current?: ContactFieldData,
+): ContactFieldData {
+  const suffix = uniqueSuffix();
+  const label = faker.helpers.arrayElement(['Insurance', 'Patient MRN', 'Referral', 'Membership']);
+  return {
+    name: `${label} ${suffix}`,
+    key: current?.key ?? `qa_${label.toLowerCase().replace(/\W+/g, '_')}_${suffix}`,
+    type: current?.type ?? type,
+    options: (current?.type ?? type) === 'Choice' ? ['Daman', 'AXA', `Bupa ${suffix}`] : [],
+    placeholder: `${faker.helpers.arrayElement(['Enter', 'Type', 'Add'])} the ${label.toLowerCase()}`,
+    showOnContacts: current ? !current.showOnContacts : true,
+  };
+}
+
+/** The outcome reason's "Show under" options and the value the API stores for each. */
+export const OUTCOME_ANSWERS = {
+  'All done': 'all_done',
+  'Nothing booked': 'nothing_booked',
+  'Not interested': 'not_interested',
+  "No-show, won't come back": 'wont_come',
+} as const;
+
+export type OutcomeAnswerName = keyof typeof OUTCOME_ANSWERS;
+
+/** What a new reason is shown under when it is added from the page, before any edit. */
+export const DEFAULT_OUTCOME_ANSWERS: OutcomeAnswerName[] = ['Nothing booked', 'Not interested'];
+
+/** Settings → Inbox → Outcome Reasons. */
+export type OutcomeReasonData = { label: string; showUnder: OutcomeAnswerName[] };
+
+/** An outcome reason; pass the current one to get a different label and other answers. */
+export function buildOutcomeReason(current?: OutcomeReasonData): OutcomeReasonData {
+  const all = Object.keys(OUTCOME_ANSWERS) as OutcomeAnswerName[];
+  const others = all.filter((answer) => !current?.showUnder.includes(answer));
+  return {
+    label: `qa-${faker.helpers.arrayElement(['Insurance declined', 'Moved away', 'Too busy', 'Prefers online'])} ${uniqueSuffix()}`,
+    showUnder: current ? others : faker.helpers.arrayElements(all, { min: 1, max: 3 }),
+  };
+}
+
+/** The wrap-up outcome's "Result" options and the value the API stores for each. */
+export const WRAP_UP_RESULTS = { Won: 'won', 'In progress': 'in_progress', Lost: 'lost' } as const;
+
+export type WrapUpResultName = keyof typeof WRAP_UP_RESULTS;
+
+/** Settings → Inbox → Wrap-Up: one outcome. Its single step closes the conversation. */
+export type WrapUpOutcomeData = { name: string; result: WrapUpResultName; description: string };
+
+/** A wrap-up outcome; pass the current one to get a different result. */
+export function buildWrapUpOutcome(current?: WrapUpOutcomeData): WrapUpOutcomeData {
+  const results = Object.keys(WRAP_UP_RESULTS) as WrapUpResultName[];
+  return {
+    name: `qa-${faker.helpers.arrayElement(['Booked appointment', 'Sent price list', 'Will call back'])} ${uniqueSuffix()}`,
+    result: pickOther(results, (result) => result === current?.result),
+    description: `Pick this when ${faker.helpers.arrayElement(['the patient booked', 'prices were shared', 'the patient asked for a call'])}.`,
+  };
+}
+
+/** Settings → Workspace → API Keys. */
+export type ApiKeyData = { name: string };
+
+export function buildApiKey(): ApiKeyData {
+  return {
+    name: `qa-${faker.helpers.arrayElement(['CRM sync', 'Zapier', 'Reporting'])} key ${uniqueSuffix()}`,
+  };
+}
+
+/** The only webhook event the app offers today. */
+export const WEBHOOK_EVENT = 'channel.incoming_message';
+
+/** Settings → Workspace → API Keys → Webhooks. URLs are on example.com, so nothing is delivered. */
+export type WebhookData = { url: string; description: string };
+
+export function buildWebhook(): WebhookData {
+  const suffix = uniqueSuffix();
+  return {
+    url: `https://example.com/qa-webhooks/${faker.word.noun()}-${suffix}`,
+    description: `qa-${faker.helpers.arrayElement(['CRM', 'Data warehouse', 'Alerts'])} ${suffix}`,
+  };
+}
+
+/** The saved view's rule fields and operators used by the tests, and their API values. */
+export const VIEW_FIELDS = { 'First name': 'firstName', 'Last name': 'lastName', Email: 'email' } as const;
+export const VIEW_OPERATORS = { contains: 'contains', 'starts with': 'beginsWith' } as const;
+
+/** Icons from the emoji picker: what to search for, and the emoji to pick from the results. */
+export const VIEW_ICONS = [
+  { search: 'rocket', emoji: '🚀' },
+  { search: 'fire', emoji: '🔥' },
+  { search: 'bell', emoji: '🔔' },
+] as const;
+
+/** Inbox → Views: a saved filter with one rule. */
+export type SavedViewData = {
+  name: string;
+  icon: (typeof VIEW_ICONS)[number];
+  rule: { field: keyof typeof VIEW_FIELDS; operator: keyof typeof VIEW_OPERATORS; value: string };
+  share: 'Just me' | 'Everyone';
+};
+
+/** A saved view; pass the current one to get a different icon, rule and sharing. */
+export function buildSavedView(current?: SavedViewData): SavedViewData {
+  const fields = Object.keys(VIEW_FIELDS) as (keyof typeof VIEW_FIELDS)[];
+  const operators = Object.keys(VIEW_OPERATORS) as (keyof typeof VIEW_OPERATORS)[];
+  return {
+    name: `qa-${faker.helpers.arrayElement(['VIP patients', 'New leads', 'Dental enquiries'])} ${uniqueSuffix()}`,
+    icon: pickOther(VIEW_ICONS, (icon) => icon.emoji === current?.icon.emoji),
+    rule: {
+      field: pickOther(fields, (field) => field === current?.rule.field),
+      operator: pickOther(operators, (operator) => operator === current?.rule.operator),
+      value: `qa${uniqueSuffix()}`,
+    },
+    share:
+      current?.share === 'Everyone' ? 'Just me' : current ? 'Everyone' : pickRandom(['Just me', 'Everyone']),
+  };
+}

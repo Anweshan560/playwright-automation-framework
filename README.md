@@ -37,6 +37,10 @@ Everything else in `.env.example` is optional and defaults to the beta environme
 | Clinic → Appointments / Billing               | `npm run test:appointments` / `npm run test:billing`              |
 | All of Settings (except Organization)         | `npm run test:settings`                                           |
 | Settings → Members                            | `npm run test:members`                                            |
+| Settings → Contact Fields / Outcome Reasons   | `npm run test:contact-fields` / `npm run test:outcome-reasons`    |
+| Settings → Wrap-Up (one test at a time)       | `npm run test:wrap-up`                                            |
+| Settings → API Keys and Webhooks              | `npm run test:api-keys`                                           |
+| Inbox → saved Views                           | `npm run test:inbox`                                              |
 | Settings → Organization (runs on its own)     | `npm run test:organization`                                       |
 | Contacts                                      | `npm run test:contacts`                                           |
 | One file                                      | `npx playwright test tests/clinic/doctors/doctors.spec.ts`        |
@@ -54,25 +58,31 @@ changes affect the whole app (switching the organization type to E-commerce hide
 They run only through `npm run test:organization` or `npm run test:all`, one test at a time, and every
 test restores the original values. In any other run they show as _skipped_, with that reason.
 
+**Why Settings → Wrap-Up runs one test at a time:** a workspace has a single wrap-up, so two tests
+changing it at once would overwrite each other. Its tests have their own `workspace-settings` project
+(one worker), which runs alongside the parallel tests in every normal run, and each test puts the
+wrap-up back as it found it.
+
 Every run starts with `tests/setup/auth.setup.ts`, which logs in once and saves the session for the other tests.
 
 ## Folder structure
 
-| Folder                    | What's in it                                                                                  |
-| ------------------------- | --------------------------------------------------------------------------------------------- |
-| `tests/auth/`             | Login: UI (`login.spec.ts`) and API (`login.api.spec.ts`).                                    |
-| `tests/clinic/<feature>/` | Doctors, Treatments, Departments, Appointments, Billing: UI and API tests side by side.       |
-| `tests/settings/<page>/`  | Settings → Organization (General) and Members: UI and API tests side by side.                 |
-| `tests/contacts/`         | Contacts: list, create, row actions, side panel and segments (UI), and the contacts API.      |
-| `tests/setup/`            | Logs in once before the other tests and saves the session.                                    |
-| `pages/`                  | Page objects (`auth/`, `clinic/`, `settings/`, `contacts/`): _how_ to use each page.          |
-| `api/`                    | API clients: one small class per endpoint group, plus the field-name mapping to the UI forms. |
-| `fixtures/`               | The `test` that every spec imports, ready-made with page objects, API clients and cleanup.    |
-| `config/`                 | `env.ts`: the only place that reads `.env` (URLs, credentials, limits).                       |
-| `utils/`                  | Helpers: Faker test data, network recording/mocking, response timing.                         |
-| `reporters/`              | Writes a screenshot and plain-text summary of every failed test to `test-results/failures/`.  |
-| `scripts/`                | `test-all.mjs`: runs the suite, then Settings → Organization on its own.                      |
-| `.github/`                | CI: smoke test, then the full suite, then Settings → Organization, on every push and PR.      |
+| Folder                    | What's in it                                                                                   |
+| ------------------------- | ---------------------------------------------------------------------------------------------- |
+| `tests/auth/`             | Login: UI (`login.spec.ts`) and API (`login.api.spec.ts`).                                     |
+| `tests/clinic/<feature>/` | Doctors, Treatments, Departments, Appointments, Billing: UI and API tests side by side.        |
+| `tests/settings/<page>/`  | Every automated Settings page (Organization, Members, Contact Fields, Wrap-Up, API Keys, …).   |
+| `tests/contacts/`         | Contacts: list, create, row actions, side panel and segments (UI), and the contacts API.       |
+| `tests/inbox/<feature>/`  | Inbox → saved Views: UI and API tests side by side.                                            |
+| `tests/setup/`            | Logs in once before the other tests and saves the session.                                     |
+| `pages/`                  | Page objects (`auth/`, `clinic/`, `settings/`, `contacts/`, `inbox/`): _how_ to use each page. |
+| `api/`                    | API clients: one small class per endpoint group, plus the field-name mapping to the UI forms.  |
+| `fixtures/`               | The `test` that every spec imports, ready-made with page objects, API clients and cleanup.     |
+| `config/`                 | `env.ts`: the only place that reads `.env` (URLs, credentials, limits).                        |
+| `utils/`                  | Helpers: Faker test data, network recording/mocking, response timing.                          |
+| `reporters/`              | Writes a screenshot and plain-text summary of every failed test to `test-results/failures/`.   |
+| `scripts/`                | `test-all.mjs`: runs the suite, then Settings → Organization on its own.                       |
+| `.github/`                | CI: smoke test, then the full suite, then Settings → Organization, on every push and PR.       |
 
 File names decide how a test runs: `*.api.spec.ts` runs in the `api` project, other `*.spec.ts` files in `ui`.
 

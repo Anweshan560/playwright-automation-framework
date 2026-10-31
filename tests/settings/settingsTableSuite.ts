@@ -1,5 +1,6 @@
 /**
- * The tests every Settings table page gets (Websites, Teams, Tags, Closing Notes, Snippets, Files).
+ * The tests every Settings table page gets (Websites, Teams, Tags, Closing Notes, Snippets, Files,
+ * API Keys).
  * Each page's spec files call these with its own config (see settingsTables.ts), so the steps are
  * written once and every page is tested the same way.
  */

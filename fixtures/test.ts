@@ -1,11 +1,15 @@
 import { test as base } from '@playwright/test';
 import { AppointmentsApi, BillingApi } from '../api/AppointmentsApi';
 import { AuthApi } from '../api/AuthApi';
+import { ContactFieldsApi } from '../api/ContactFieldsApi';
 import { ContactsApi, LifecyclesApi, SegmentsApi } from '../api/ContactsApi';
+import { CustomViewsApi } from '../api/CustomViewsApi';
 import { DepartmentsApi } from '../api/DepartmentsApi';
+import { ApiKeysApi, WebhooksApi } from '../api/DeveloperApi';
 import { DoctorsApi } from '../api/DoctorsApi';
 import { MembersApi } from '../api/MembersApi';
 import { OrganizationApi } from '../api/OrganizationApi';
+import { OutcomeReasonsApi } from '../api/OutcomeReasonsApi';
 import {
   ClosingNotesApi,
   SavedFilesApi,
@@ -16,8 +20,10 @@ import {
 } from '../api/SettingsApis';
 import type { HeadersProvider } from '../api/ResourceApi';
 import { TreatmentsApi } from '../api/TreatmentsApi';
+import { WrapUpApi } from '../api/WrapUpApi';
 import { env } from '../config/env';
 import { LoginPage } from '../pages/auth/LoginPage';
+import { SavedViewsPage } from '../pages/inbox/SavedViewsPage';
 import { AppointmentsPage } from '../pages/clinic/AppointmentsPage';
 import { BillingPage } from '../pages/clinic/BillingPage';
 import { ContactsPage } from '../pages/contacts/ContactsPage';
@@ -26,11 +32,15 @@ import { DoctorsPage } from '../pages/clinic/DoctorsPage';
 import { TreatmentsPage } from '../pages/clinic/TreatmentsPage';
 import { MembersPage } from '../pages/settings/MembersPage';
 import { OrganizationGeneralPage } from '../pages/settings/OrganizationGeneralPage';
+import { OutcomeReasonsPage } from '../pages/settings/OutcomeReasonsPage';
 import { ClosingNotesPage } from '../pages/settings/ClosingNotesPage';
+import { ContactFieldsPage } from '../pages/settings/ContactFieldsPage';
 import { SavedFilesPage } from '../pages/settings/SavedFilesPage';
 import { SnippetsPage } from '../pages/settings/SnippetsPage';
 import { TagsPage } from '../pages/settings/TagsPage';
 import { TeamsPage } from '../pages/settings/TeamsPage';
+import { WebhooksPage } from '../pages/settings/WebhooksPage';
+import { WrapUpPage } from '../pages/settings/WrapUpPage';
 import { WebsitesPage } from '../pages/settings/WebsitesPage';
 
 /** Collects clean-up actions and runs them after the test, even when the test failed. */
@@ -68,6 +78,17 @@ type Fixtures = {
   snippetsApi: SnippetsApi;
   savedFilesApi: SavedFilesApi;
   contactsApi: ContactsApi;
+  contactFieldsPage: ContactFieldsPage;
+  contactFieldsApi: ContactFieldsApi;
+  outcomeReasonsPage: OutcomeReasonsPage;
+  outcomeReasonsApi: OutcomeReasonsApi;
+  wrapUpPage: WrapUpPage;
+  wrapUpApi: WrapUpApi;
+  apiKeysApi: ApiKeysApi;
+  webhooksPage: WebhooksPage;
+  webhooksApi: WebhooksApi;
+  savedViewsPage: SavedViewsPage;
+  customViewsApi: CustomViewsApi;
   segmentsApi: SegmentsApi;
   lifecyclesApi: LifecyclesApi;
   appointmentsApi: AppointmentsApi;
@@ -225,6 +246,50 @@ export const test = base.extend<Fixtures>({
 
   billingApi: async ({ request, apiHeaders }, use) => {
     await use(new BillingApi(request, apiHeaders));
+  },
+
+  contactFieldsPage: async ({ page }, use) => {
+    await use(new ContactFieldsPage(page));
+  },
+
+  contactFieldsApi: async ({ request, apiHeaders }, use) => {
+    await use(new ContactFieldsApi(request, apiHeaders));
+  },
+
+  outcomeReasonsPage: async ({ page }, use) => {
+    await use(new OutcomeReasonsPage(page));
+  },
+
+  outcomeReasonsApi: async ({ request, apiHeaders }, use) => {
+    await use(new OutcomeReasonsApi(request, apiHeaders));
+  },
+
+  wrapUpPage: async ({ page }, use) => {
+    await use(new WrapUpPage(page));
+  },
+
+  wrapUpApi: async ({ request, apiHeaders }, use) => {
+    await use(new WrapUpApi(request, apiHeaders));
+  },
+
+  apiKeysApi: async ({ request, apiHeaders }, use) => {
+    await use(new ApiKeysApi(request, apiHeaders));
+  },
+
+  webhooksPage: async ({ page }, use) => {
+    await use(new WebhooksPage(page));
+  },
+
+  webhooksApi: async ({ request, apiHeaders }, use) => {
+    await use(new WebhooksApi(request, apiHeaders));
+  },
+
+  savedViewsPage: async ({ page, workspaceId }, use) => {
+    await use(new SavedViewsPage(page, workspaceId));
+  },
+
+  customViewsApi: async ({ request, apiHeaders }, use) => {
+    await use(new CustomViewsApi(request, apiHeaders));
   },
 
   workspaceId: async ({ apiHeaders }, use) => {

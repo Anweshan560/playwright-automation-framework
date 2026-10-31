@@ -17,6 +17,8 @@ import {
   toTeamPayload,
   toWebsitePayload,
 } from '../../api/SettingsApis';
+import { ApiKeysApi, toApiKeyPayload } from '../../api/DeveloperApi';
+import { ApiKeysPage } from '../../pages/settings/ApiKeysPage';
 import { ClosingNotesPage } from '../../pages/settings/ClosingNotesPage';
 import { SavedFilesPage } from '../../pages/settings/SavedFilesPage';
 import { SnippetsPage } from '../../pages/settings/SnippetsPage';
@@ -24,6 +26,7 @@ import { TagsPage } from '../../pages/settings/TagsPage';
 import { TeamsPage } from '../../pages/settings/TeamsPage';
 import { WebsitesPage } from '../../pages/settings/WebsitesPage';
 import {
+  buildApiKey,
   buildClosingNote,
   buildSavedFile,
   buildSnippet,
@@ -116,4 +119,17 @@ export const SAVED_FILES = defineSettingsTable({
     type: 'type must be one of the following values: image, video, audio, file, iframe, sticker',
   },
   notFoundMessage: 'No saved file found',
+});
+
+export const API_KEYS = defineSettingsTable({
+  title: 'API Keys',
+  singular: 'API key',
+  tags: ['@settings', '@api-keys'],
+  createPage: (page) => new ApiKeysPage(page),
+  createApi: (request, headers) => new ApiKeysApi(request, headers),
+  build: () => buildApiKey(),
+  toPayload: toApiKeyPayload,
+  deleteConfirmation: (apiKey) => apiKey.name,
+  requiredFieldErrors: { name: 'name should not be empty' },
+  notFoundMessage: 'No such API key',
 });

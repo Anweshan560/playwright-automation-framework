@@ -18,6 +18,13 @@ const API_TESTS = /.*\.api\.spec\.ts/;
  */
 const ORGANIZATION_TESTS = /settings[\\/]organization[\\/].*\.spec\.ts/;
 
+/**
+ * Settings the workspace has only one of (today: the Wrap-Up outcomes). Tests change them and put
+ * them back, so they run one at a time in their own project, alongside the parallel ones. Unlike
+ * Settings → Organization they don't affect other tests, so they run in every normal run.
+ */
+const WORKSPACE_SETTINGS_TESTS = /settings[\\/]wrap-up[\\/].*\.spec\.ts/;
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
@@ -57,14 +64,14 @@ export default defineConfig({
     {
       name: 'smoke',
       grep: /@smoke/,
-      testIgnore: [API_TESTS, ORGANIZATION_TESTS],
+      testIgnore: [API_TESTS, ORGANIZATION_TESTS, WORKSPACE_SETTINGS_TESTS],
       use: { ...devices['Desktop Chrome'] },
     },
     // Browser tests of the user interface: every *.spec.ts that is not an API test.
     {
       name: 'ui',
       grepInvert: /@smoke/,
-      testIgnore: [API_TESTS, ORGANIZATION_TESTS],
+      testIgnore: [API_TESTS, ORGANIZATION_TESTS, WORKSPACE_SETTINGS_TESTS],
       dependencies: ['setup'],
       use: { ...devices['Desktop Chrome'], storageState: AUTH_FILE },
     },
@@ -72,7 +79,7 @@ export default defineConfig({
     {
       name: 'api',
       testMatch: API_TESTS,
-      testIgnore: ORGANIZATION_TESTS,
+      testIgnore: [ORGANIZATION_TESTS, WORKSPACE_SETTINGS_TESTS],
       dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
@@ -80,6 +87,14 @@ export default defineConfig({
         headless: true,
         launchOptions: { slowMo: 0 },
       },
+    },
+    // Workspace-wide settings (UI and API): one test at a time, next to the parallel projects.
+    {
+      name: 'workspace-settings',
+      testMatch: WORKSPACE_SETTINGS_TESTS,
+      dependencies: ['setup'],
+      workers: 1,
+      use: { ...devices['Desktop Chrome'], storageState: AUTH_FILE },
     },
     // Settings → Organization (UI and API): on their own, one test at a time.
     {

@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 import { SettingsNavigation } from './SettingsNavigation';
 import { waitForApiResponse } from '../../utils/network';
+import { collapseSetupGuide } from '../setupGuide';
 
 /** The labels and paths that differ between the Settings pages built on SettingsTablePage. */
 export type SettingsTableSection = {
@@ -24,7 +25,7 @@ export type SettingsTableSection = {
 
 /**
  * Settings pages that list records in a table and add/edit them in dialogs:
- * Websites, Teams, Tags, Closing Notes, Snippets and Files.
+ * Websites, Teams, Tags, Closing Notes, Snippets, Files and API Keys.
  * Subclasses say how to fill and check their dialog's fields; everything else is shared.
  */
 export abstract class SettingsTablePage<TData> {
@@ -140,15 +141,13 @@ export abstract class SettingsTablePage<TData> {
   }
 
   /** Reload the list, then choose an item from the record's row menu. */
-  private async chooseRowAction(data: TData, action: 'Edit' | 'Delete'): Promise<void> {
+  protected async chooseRowAction(data: TData, action: 'Edit' | 'Delete'): Promise<void> {
     await this.open();
     const menuButton = this.rowFor(data)
       .getByRole('button', { name: this.section.rowActionsButtonName })
       .first();
     const menuItem = this.page.getByRole('menuitem', { name: action, exact: true });
-    // The setup guide floats over the bottom right of the page, where lower rows' buttons are.
-    const collapseGuide = this.page.getByRole('button', { name: 'Collapse setup guide' });
-    if (await collapseGuide.isVisible()) await collapseGuide.click();
+    await collapseSetupGuide(this.page);
     // Click, never a key press: parallel tests add and remove records, so the table re-renders
     // while this runs, and a key press can land on whatever has focus by then (Enter on a row
     // opens that row's edit dialog). A click hits this button or waits, e.g. while a toast covers
@@ -164,7 +163,7 @@ export abstract class SettingsTablePage<TData> {
   }
 
   /** Matches the API path of a single record, e.g. "/v1/websites/<id>". */
-  private recordApiPath(): RegExp {
+  protected recordApiPath(): RegExp {
     return new RegExp(`^${this.section.apiPath}/[^/]+$`);
   }
 

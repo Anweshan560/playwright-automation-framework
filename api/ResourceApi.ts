@@ -20,6 +20,17 @@ export const ENDPOINTS = {
   contacts: '/v1/contacts',
   segments: '/v1/segments',
   lifecycles: '/v1/lifecycles',
+  /** Archived fields are listed at `/archived`; a field is restored or purged at `/<id>/restore` and `/<id>/permanent`. */
+  contactFields: '/v1/contact-fields',
+  outcomeReasons: '/v1/outcome-reasons',
+  /** The workspace's wrap-up: one record whose `config` holds every outcome. */
+  wrapUp: '/v1/wrap-up',
+  apiKeys: '/v1/api-keys',
+  /** Webhooks are delivered by Svix; the event types are listed at `/v1/webhooks/event-types`. */
+  webhookEndpoints: '/v1/webhooks/endpoints',
+  webhookEventTypes: '/v1/webhooks/event-types',
+  /** Inbox saved views. */
+  customViews: '/v1/custom-views',
   /** Teams belong to a workspace. */
   teams: (workspaceId: string) => `/v1/workspaces/${workspaceId}/teams`,
 } as const;
@@ -93,6 +104,14 @@ export class ResourceApi<TPayload extends object, TRecord extends { id: string }
       page = data.meta.nextPage;
     }
     return records;
+  }
+
+  /**
+   * One record, found in the list. For endpoints without GET by id (e.g. contact fields).
+   * @returns undefined if the list doesn't contain it
+   */
+  async findRecord(id: string): Promise<TRecord | undefined> {
+    return (await this.listRecords()).find((record) => record.id === id);
   }
 
   /** Create a record for test setup and return it. Throws unless the API answers 201. */
