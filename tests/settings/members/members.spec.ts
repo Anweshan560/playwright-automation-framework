@@ -1,6 +1,7 @@
 import { test, expect } from '../../../fixtures/test';
 import { ORGANIZATION_ROLES, WORKSPACE_ROLES, buildInvitee } from '../../../utils/testData';
 import { recordApiCalls } from '../../../utils/network';
+import { env } from '../../../config/env';
 
 // Invitations go to @example.com, a domain reserved for testing, so nobody receives an email.
 // Every test revokes the invitations it sends.
@@ -23,8 +24,10 @@ test.describe('Settings → Organization → Members', { tag: ['@settings', '@me
 
     await test.step('go to Settings → Organization → Members', () => membersPage.openFromDashboard());
     await test.step('open the Invite user dialog', () => membersPage.openInviteDialog());
-    await test.step('fill in name, email, organization role and workspace role', () =>
-      membersPage.inviteDialog.fill(invitee));
+    // The dialog starts on the first workspace the API lists, not the current one (seen
+    // 2026-10-31), so the test workspace is always chosen explicitly.
+    await test.step('fill in name, email, organization role, the test workspace and its role', () =>
+      membersPage.inviteDialog.fill(invitee, env.testWorkspace));
     const invitationId = await test.step('send the invite', () => membersPage.sendInvite());
     cleanup.add(`invitation for ${invitee.email}`, () => membersApi.revokeIfPending(invitationId));
 
@@ -83,7 +86,7 @@ test.describe('Settings → Organization → Members', { tag: ['@settings', '@me
       await membersPage.openInviteDialog();
     });
     await test.step('fill in every field with an invalid email and send', async () => {
-      await membersPage.inviteDialog.fill(invitee);
+      await membersPage.inviteDialog.fill(invitee, env.testWorkspace);
       await membersPage.inviteDialog.sendInviteButton.click();
     });
     await test.step('the browser rejects the email and the dialog stays open', async () => {

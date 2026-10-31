@@ -20,43 +20,51 @@ TEST_USERNAME=your-test-account@example.com
 TEST_PASSWORD=your-password
 ```
 
-Everything else in `.env.example` is optional and defaults to the beta environment.
+Everything else in `.env.example` is optional and defaults to the beta environment. `TEST_WORKSPACE`
+(default `Testing`) is the workspace every test runs in: setup switches to it after logging in.
 `.env` is git-ignored, so never commit it. On CI the GitHub secrets `SECRETU` and `SECRETP` provide the account.
 
 **3. Run:**
 
-| What                                          | Command                                                           |
-| --------------------------------------------- | ----------------------------------------------------------------- |
-| Everything, including Settings → Organization | `npm run test:all`                                                |
-| Everything except Settings → Organization     | `npm test`                                                        |
-| Smoke test only (is the app up?)              | `npm run test:smoke`                                              |
-| UI tests only / API tests only                | `npm run test:ui` / `npm run test:api`                            |
-| Login                                         | `npm run test:login`                                              |
-| All of Clinic                                 | `npm run test:clinic`                                             |
-| One Clinic feature                            | `npm run test:doctors` (or `test:treatments`, `test:departments`) |
-| Clinic → Appointments / Billing               | `npm run test:appointments` / `npm run test:billing`              |
-| All of Settings (except Organization)         | `npm run test:settings`                                           |
-| Settings → Members                            | `npm run test:members`                                            |
-| Settings → Contact Fields / Outcome Reasons   | `npm run test:contact-fields` / `npm run test:outcome-reasons`    |
-| Settings → Wrap-Up (one test at a time)       | `npm run test:wrap-up`                                            |
-| Settings → API Keys and Webhooks              | `npm run test:api-keys`                                           |
-| Inbox → saved Views                           | `npm run test:inbox`                                              |
-| Settings → Organization (runs on its own)     | `npm run test:organization`                                       |
-| Contacts                                      | `npm run test:contacts`                                           |
-| One file                                      | `npx playwright test tests/clinic/doctors/doctors.spec.ts`        |
-| One test, by name                             | `npx playwright test -g "when user deletes it"`                   |
-| Headless (no browser window)                  | `npm run test:headless`                                           |
-| Headed (watch the browser)                    | `npm run test:headed`                                             |
-| UI mode (pick, re-run and debug tests)        | `npm run test:debug`                                              |
-| Type-check / format                           | `npm run typecheck` / `npm run format`                            |
+| What                                                       | Command                                                           |
+| ---------------------------------------------------------- | ----------------------------------------------------------------- |
+| Everything, including the exclusive tests                  | `npm run test:all`                                                |
+| Everything except the exclusive tests                      | `npm test`                                                        |
+| Smoke test only (is the app up?)                           | `npm run test:smoke`                                              |
+| UI tests only / API tests only                             | `npm run test:ui` / `npm run test:api`                            |
+| Login                                                      | `npm run test:login`                                              |
+| All of Clinic                                              | `npm run test:clinic`                                             |
+| One Clinic feature                                         | `npm run test:doctors` (or `test:treatments`, `test:departments`) |
+| Clinic → Appointments / Billing                            | `npm run test:appointments` / `npm run test:billing`              |
+| All of Settings (except the exclusive tests)               | `npm run test:settings`                                           |
+| Settings → Members                                         | `npm run test:members`                                            |
+| Settings → Contact Fields / Outcome Reasons                | `npm run test:contact-fields` / `npm run test:outcome-reasons`    |
+| Settings → Wrap-Up (one test at a time)                    | `npm run test:wrap-up`                                            |
+| Settings → API Keys and Webhooks                           | `npm run test:api-keys`                                           |
+| Inbox → saved Views                                        | `npm run test:inbox`                                              |
+| All exclusive tests (run on their own)                     | `npm run test:exclusive`                                          |
+| Settings → Organization (exclusive)                        | `npm run test:organization`                                       |
+| Workspace General, Hours, SLAs, Assignment, AI (exclusive) | `npm run test:workspace`                                          |
+| Settings → Lifecycle stages (exclusive)                    | `npm run test:lifecycle`                                          |
+| Contacts                                                   | `npm run test:contacts`                                           |
+| One file                                                   | `npx playwright test tests/clinic/doctors/doctors.spec.ts`        |
+| One test, by name                                          | `npx playwright test -g "when user deletes it"`                   |
+| Headless (no browser window)                               | `npm run test:headless`                                           |
+| Headed (watch the browser)                                 | `npm run test:headed`                                             |
+| UI mode (pick, re-run and debug tests)                     | `npm run test:debug`                                              |
+| Type-check / format                                        | `npm run typecheck` / `npm run format`                            |
 
 Locally the browser window is visible by default. `test:headless` hides it, and accepts the same
 options: `npm run test:headless -- tests/clinic/doctors`. You can also set `HEADLESS=true` in `.env`.
 
-**Why Settings → Organization runs on its own:** those tests change the real organization, and some
-changes affect the whole app (switching the organization type to E-commerce hides the Clinic menu).
-They run only through `npm run test:organization` or `npm run test:all`, one test at a time, and every
-test restores the original values. In any other run they show as _skipped_, with that reason.
+**Why some tests are exclusive (run on their own):** they change settings the other tests rely on.
+Settings → Organization changes the whole app (switching the organization type to E-commerce hides the
+Clinic menu); the workspace's General settings, Hours, SLAs, Assignment rules, AI switch and Lifecycle
+stages change how every conversation, booking and contact behaves (the contacts tests read the stages).
+They live in the `exclusive` project and run only through `npm run test:exclusive` (or the narrower
+`test:organization`, `test:workspace`, `test:lifecycle`), or last in `npm run test:all`, one test at a
+time, and every test restores the original values. In any other run they show as _skipped_, with that
+reason. On CI they run after the regression suite.
 
 **Why Settings → Wrap-Up runs one test at a time:** a workspace has a single wrap-up, so two tests
 changing it at once would overwrite each other. Its tests have their own `workspace-settings` project
@@ -81,8 +89,8 @@ Every run starts with `tests/setup/auth.setup.ts`, which logs in once and saves 
 | `config/`                 | `env.ts`: the only place that reads `.env` (URLs, credentials, limits).                        |
 | `utils/`                  | Helpers: Faker test data, network recording/mocking, response timing.                          |
 | `reporters/`              | Writes a screenshot and plain-text summary of every failed test to `test-results/failures/`.   |
-| `scripts/`                | `test-all.mjs`: runs the suite, then Settings → Organization on its own.                       |
-| `.github/`                | CI: smoke test, then the full suite, then Settings → Organization, on every push and PR.       |
+| `scripts/`                | `test-all.mjs`: runs the suite, then the exclusive tests on their own.                         |
+| `.github/`                | CI: smoke test, then the full suite, then the exclusive tests, on every push and PR.           |
 
 File names decide how a test runs: `*.api.spec.ts` runs in the `api` project, other `*.spec.ts` files in `ui`.
 

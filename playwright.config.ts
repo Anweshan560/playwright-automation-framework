@@ -12,16 +12,18 @@ const isHeadless = isCI || process.env.HEADLESS === 'true';
 const API_TESTS = /.*\.api\.spec\.ts/;
 
 /**
- * Settings → Organization tests change the real organization that every other test relies on
- * (switching its type even hides the Clinic menu). They have their own project, run one test at
- * a time, and only when asked for: `npm run test:organization` (see env.runOrganizationTests).
+ * Exclusive tests change settings every other test relies on: the organization (switching its type
+ * even hides the Clinic menu), and the workspace's general settings, hours, SLAs, assignment rules,
+ * AI and lifecycle stages. They have their own project, run one test at a time, and only when asked
+ * for: `npm run test:exclusive`, or last in `npm run test:all` (see env.runExclusiveTests).
  */
-const ORGANIZATION_TESTS = /settings[\\/]organization[\\/].*\.spec\.ts/;
+const EXCLUSIVE_TESTS =
+  /settings[\\/](organization|workspace|hours|sla|assignment|ai|lifecycle)[\\/].*\.spec\.ts/;
 
 /**
  * Settings the workspace has only one of (today: the Wrap-Up outcomes). Tests change them and put
  * them back, so they run one at a time in their own project, alongside the parallel ones. Unlike
- * Settings → Organization they don't affect other tests, so they run in every normal run.
+ * the exclusive tests they don't affect other tests, so they run in every normal run.
  */
 const WORKSPACE_SETTINGS_TESTS = /settings[\\/]wrap-up[\\/].*\.spec\.ts/;
 
@@ -64,14 +66,14 @@ export default defineConfig({
     {
       name: 'smoke',
       grep: /@smoke/,
-      testIgnore: [API_TESTS, ORGANIZATION_TESTS, WORKSPACE_SETTINGS_TESTS],
+      testIgnore: [API_TESTS, EXCLUSIVE_TESTS, WORKSPACE_SETTINGS_TESTS],
       use: { ...devices['Desktop Chrome'] },
     },
     // Browser tests of the user interface: every *.spec.ts that is not an API test.
     {
       name: 'ui',
       grepInvert: /@smoke/,
-      testIgnore: [API_TESTS, ORGANIZATION_TESTS, WORKSPACE_SETTINGS_TESTS],
+      testIgnore: [API_TESTS, EXCLUSIVE_TESTS, WORKSPACE_SETTINGS_TESTS],
       dependencies: ['setup'],
       use: { ...devices['Desktop Chrome'], storageState: AUTH_FILE },
     },
@@ -79,7 +81,7 @@ export default defineConfig({
     {
       name: 'api',
       testMatch: API_TESTS,
-      testIgnore: [ORGANIZATION_TESTS, WORKSPACE_SETTINGS_TESTS],
+      testIgnore: [EXCLUSIVE_TESTS, WORKSPACE_SETTINGS_TESTS],
       dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
@@ -96,10 +98,10 @@ export default defineConfig({
       workers: 1,
       use: { ...devices['Desktop Chrome'], storageState: AUTH_FILE },
     },
-    // Settings → Organization (UI and API): on their own, one test at a time.
+    // Exclusive tests (UI and API): on their own, after everything else, one test at a time.
     {
-      name: 'organization',
-      testMatch: ORGANIZATION_TESTS,
+      name: 'exclusive',
+      testMatch: EXCLUSIVE_TESTS,
       dependencies: ['setup'],
       workers: 1,
       use: { ...devices['Desktop Chrome'], storageState: AUTH_FILE },

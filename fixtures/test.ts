@@ -20,6 +20,7 @@ import {
 } from '../api/SettingsApis';
 import type { HeadersProvider } from '../api/ResourceApi';
 import { TreatmentsApi } from '../api/TreatmentsApi';
+import { AssignmentApi, SlasApi, WorkspaceApi } from '../api/WorkspaceApi';
 import { WrapUpApi } from '../api/WrapUpApi';
 import { env } from '../config/env';
 import { LoginPage } from '../pages/auth/LoginPage';
@@ -41,6 +42,12 @@ import { TagsPage } from '../pages/settings/TagsPage';
 import { TeamsPage } from '../pages/settings/TeamsPage';
 import { WebhooksPage } from '../pages/settings/WebhooksPage';
 import { WrapUpPage } from '../pages/settings/WrapUpPage';
+import { AiSettingsPage } from '../pages/settings/AiSettingsPage';
+import { AssignmentPage } from '../pages/settings/AssignmentPage';
+import { HoursPage } from '../pages/settings/HoursPage';
+import { LifecycleStagesPage } from '../pages/settings/LifecycleStagesPage';
+import { SlaPage } from '../pages/settings/SlaPage';
+import { WorkspaceGeneralPage } from '../pages/settings/WorkspaceGeneralPage';
 import { WebsitesPage } from '../pages/settings/WebsitesPage';
 
 /** Collects clean-up actions and runs them after the test, even when the test failed. */
@@ -88,6 +95,15 @@ type Fixtures = {
   webhooksPage: WebhooksPage;
   webhooksApi: WebhooksApi;
   savedViewsPage: SavedViewsPage;
+  workspaceGeneralPage: WorkspaceGeneralPage;
+  hoursPage: HoursPage;
+  slaPage: SlaPage;
+  assignmentPage: AssignmentPage;
+  aiSettingsPage: AiSettingsPage;
+  lifecycleStagesPage: LifecycleStagesPage;
+  workspaceApi: WorkspaceApi;
+  slasApi: SlasApi;
+  assignmentApi: AssignmentApi;
   customViewsApi: CustomViewsApi;
   segmentsApi: SegmentsApi;
   lifecyclesApi: LifecyclesApi;
@@ -282,6 +298,42 @@ export const test = base.extend<Fixtures>({
 
   webhooksApi: async ({ request, apiHeaders }, use) => {
     await use(new WebhooksApi(request, apiHeaders));
+  },
+
+  workspaceGeneralPage: async ({ page, workspaceId }, use) => {
+    await use(new WorkspaceGeneralPage(page, workspaceId));
+  },
+
+  hoursPage: async ({ page, workspaceId }, use) => {
+    await use(new HoursPage(page, workspaceId));
+  },
+
+  slaPage: async ({ page, workspaceId }, use) => {
+    await use(new SlaPage(page, workspaceId));
+  },
+
+  assignmentPage: async ({ page }, use) => {
+    await use(new AssignmentPage(page));
+  },
+
+  aiSettingsPage: async ({ page, workspaceId }, use) => {
+    await use(new AiSettingsPage(page, workspaceId));
+  },
+
+  lifecycleStagesPage: async ({ page }, use) => {
+    await use(new LifecycleStagesPage(page));
+  },
+
+  workspaceApi: async ({ request, apiHeaders, workspaceId }, use) => {
+    await use(new WorkspaceApi(request, apiHeaders, workspaceId));
+  },
+
+  slasApi: async ({ request, apiHeaders, workspaceId }, use) => {
+    await use(new SlasApi(request, apiHeaders, workspaceId));
+  },
+
+  assignmentApi: async ({ request, apiHeaders }, use) => {
+    await use(new AssignmentApi(request, apiHeaders));
   },
 
   savedViewsPage: async ({ page, workspaceId }, use) => {

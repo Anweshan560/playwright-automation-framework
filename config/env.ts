@@ -11,6 +11,11 @@ export const env = {
   apiUrl: process.env.API_URL || 'https://api.replyn.dev',
   /** Clerk, the service that handles login. Public: it is in the app's own sign-in page. */
   clerkUrl: process.env.CLERK_URL || 'https://expert-albacore-78.clerk.accounts.dev',
+  /**
+   * The workspace every test runs in, by name. Setup switches to it after logging in: the app
+   * otherwise opens whichever workspace its API happens to list first, which can change.
+   */
+  testWorkspace: process.env.TEST_WORKSPACE || 'Testing',
   /** Sent as `x-tenant-id` on every API call. */
   tenantId: process.env.TENANT_ID || 'replyn',
   /**
@@ -19,11 +24,12 @@ export const env = {
    */
   apiResponseBudgetMs: Number(process.env.API_RESPONSE_BUDGET_MS) || 3000,
   /**
-   * Settings → Organization tests change the whole organization (e.g. switching its type hides
-   * the Clinic menu), so they must never run alongside other tests. They run only when this is
-   * "true", which `npm run test:organization` sets.
+   * Exclusive tests change settings the other tests rely on: the organization (switching its type
+   * hides the Clinic menu), the workspace's hours, lifecycle stages, assignment rules and AI. They
+   * must never run alongside other tests, so they run only when this is "true", which
+   * `npm run test:exclusive` (and `test:all`, after everything else) sets.
    */
-  runOrganizationTests: process.env.ORGANIZATION_TESTS === 'true',
+  runExclusiveTests: process.env.EXCLUSIVE_TESTS === 'true',
 } as const;
 
 /** Where tests/setup/auth.setup.ts saves the logged-in browser session. */

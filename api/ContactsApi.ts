@@ -159,7 +159,22 @@ export type Lifecycle = {
   contactCount: number;
 };
 
-export class LifecyclesApi extends ResourceApi<Record<string, never>, Lifecycle> {
+/** A stage as Settings → Lifecycle creates or renames it. */
+export type LifecyclePayload = {
+  name?: string;
+  emoji?: string;
+  description?: string;
+  /** Position within its group: 1 is the first stage. */
+  stage?: number;
+  type?: Lifecycle['type'];
+};
+
+/**
+ * Lifecycle stages. Listing needs `?contactCount=` (see stagesWithCounts). Settings → Lifecycle
+ * creates, renames and deletes them; contacts tests read them, so tests that change stages run
+ * in the exclusive project.
+ */
+export class LifecyclesApi extends ResourceApi<LifecyclePayload, Lifecycle> {
   constructor(request: APIRequestContext, headers: HeadersProvider) {
     super(request, headers, ENDPOINTS.lifecycles);
   }
@@ -170,6 +185,11 @@ export class LifecyclesApi extends ResourceApi<Record<string, never>, Lifecycle>
     const response = await this.request.get(this.url(), { headers, params: { contactCount: true } });
     if (!response.ok()) throw new Error(`GET ${this.path} returned ${response.status()}`);
     return (await response.json()).data;
+  }
+
+  /** Every stage. The plain list answers 400 without `?contactCount=`, so this asks for counts. */
+  override listRecords(): Promise<Lifecycle[]> {
+    return this.stagesWithCounts();
   }
 
   /** The pipeline's stages, in order: the card view's columns (lost stages are folded away). */

@@ -3,12 +3,12 @@ import { env } from '../../../config/env';
 import { buildOrganizationProfile } from '../../../utils/testData';
 
 // These tests change the real organization (name, type, timezone…), which the rest of the app
-// depends on, so they run only on their own (npm run test:organization), one at a time, and
+// depends on, so they run only on their own (npm run test:exclusive), one at a time, and
 // every test puts the original values back afterwards.
 test.describe('Settings → Organization → General', { tag: ['@settings', '@organization'] }, () => {
   test.skip(
-    !env.runOrganizationTests,
-    'Changes the whole organization, so it must run on its own: npm run test:organization',
+    !env.runExclusiveTests,
+    'Changes the whole organization, so it must run on its own: npm run test:exclusive',
   );
 
   test('should open Organization General from the Settings menu', async ({ page, organizationPage }) => {

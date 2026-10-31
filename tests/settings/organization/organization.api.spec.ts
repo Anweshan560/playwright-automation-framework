@@ -6,8 +6,8 @@ import { buildOrganizationProfile } from '../../../utils/testData';
 // Runs only on its own, like organization.spec.ts, and restores the organization afterwards.
 test.describe('Organization API', { tag: ['@settings', '@organization'] }, () => {
   test.skip(
-    !env.runOrganizationTests,
-    'Changes the whole organization, so it must run on its own: npm run test:organization',
+    !env.runExclusiveTests,
+    'Changes the whole organization, so it must run on its own: npm run test:exclusive',
   );
 
   test('should return the organization with its profile fields', async ({ organizationApi }) => {

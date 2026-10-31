@@ -679,3 +679,35 @@ export function buildSavedView(current?: SavedViewData): SavedViewData {
       current?.share === 'Everyone' ? 'Just me' : current ? 'Everyone' : pickRandom(['Just me', 'Everyone']),
   };
 }
+
+// --- Sprint 3: Workspace settings -------------------------------------------------------------
+
+/** A new name for the test workspace. Tests put the real name back afterwards. */
+export function buildWorkspaceName(): string {
+  return `qa-${faker.helpers.arrayElement(['Front desk', 'Reception', 'Patient care'])} ${uniqueSuffix()}`;
+}
+
+/** Days a follow-up keeps credit for a booking: 1 to 365, and never `current`. */
+export function buildFollowUpCreditDays(current: number): number {
+  let days = current;
+  while (days === current) days = faker.number.int({ min: 2, max: 364 });
+  return days;
+}
+
+/** An off day at least a month ahead, so it never closes the workspace while tests run. */
+export function buildOffDay(): { date: Date; reason: string } {
+  const date = faker.date.soon({ days: 300, refDate: new Date(Date.now() + 31 * 24 * 3600 * 1000) });
+  date.setHours(12, 0, 0, 0);
+  return {
+    date,
+    reason: `qa-${faker.helpers.arrayElement(['Staff training', 'Holiday', 'Renovation'])} ${uniqueSuffix()}`,
+  };
+}
+
+/** A lifecycle stage name and emoji; the emoji is one the picker offers. */
+export function buildLifecycleStage(): { name: string; emoji: string } {
+  return {
+    name: `qa-${faker.helpers.arrayElement(['Consultation booked', 'Quote sent', 'Treatment planned'])} ${uniqueSuffix()}`,
+    emoji: faker.helpers.arrayElement(['🧪', '📅', '💬']),
+  };
+}

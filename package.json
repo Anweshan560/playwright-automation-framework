@@ -29,7 +29,10 @@
     "test:wrap-up": "playwright test --project=workspace-settings",
     "test:api-keys": "playwright test tests/settings/api-keys tests/settings/webhooks",
     "test:inbox": "playwright test tests/inbox",
-    "test:organization": "cross-env ORGANIZATION_TESTS=true playwright test --project=organization",
+    "test:exclusive": "cross-env EXCLUSIVE_TESTS=true playwright test --project=exclusive",
+    "test:organization": "cross-env EXCLUSIVE_TESTS=true playwright test --project=exclusive tests/settings/organization",
+    "test:workspace": "cross-env EXCLUSIVE_TESTS=true playwright test --project=exclusive tests/settings/workspace tests/settings/hours tests/settings/sla tests/settings/assignment tests/settings/ai",
+    "test:lifecycle": "cross-env EXCLUSIVE_TESTS=true playwright test --project=exclusive tests/settings/lifecycle",
     "test:contacts": "playwright test tests/contacts",
     "test:all": "node scripts/test-all.mjs"
   },

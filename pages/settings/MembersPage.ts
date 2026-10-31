@@ -32,12 +32,17 @@ export class InviteUserDialog {
     return this.root.getByText(message, { exact: true });
   }
 
-  /** Fill every field with `invitee`, in the currently selected workspace. */
-  async fill(invitee: Invitee): Promise<void> {
+  /**
+   * Fill every field with `invitee`, giving access to `workspace` (by name). The dialog starts on
+   * the first workspace the API lists, not the current one, so always choose it.
+   */
+  async fill(invitee: Invitee, workspace: string): Promise<void> {
     await this.firstNameInput.fill(invitee.firstName);
     await this.lastNameInput.fill(invitee.lastName);
     await this.emailInput.fill(invitee.email);
     await this.chooseOption(this.organizationRoleButton, invitee.organizationRole);
+    await this.chooseOption(this.workspaceButton, workspace);
+    await expect(this.workspaceButton).toHaveText(workspace);
     await this.chooseOption(this.workspaceRoleButton, invitee.workspaceRole);
   }
 
