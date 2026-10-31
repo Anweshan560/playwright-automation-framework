@@ -1,6 +1,6 @@
 import { test, expect } from '../../../fixtures/test';
 import { SLA_CLOCKS, defaultSlaClock, type SlaClock } from '../../../api/WorkspaceApi';
-import { runOnlyOnItsOwn } from '../exclusive';
+import { runOnlyOnItsOwn } from '../../exclusive';
 import { env } from '../../../config/env';
 
 /** All six clocks off, except `changes` applied to First reply. */

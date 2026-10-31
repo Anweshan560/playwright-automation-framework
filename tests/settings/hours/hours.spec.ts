@@ -1,6 +1,6 @@
 import { test, expect } from '../../../fixtures/test';
 import { weekdayHours } from '../../../api/WorkspaceApi';
-import { runOnlyOnItsOwn } from '../exclusive';
+import { runOnlyOnItsOwn } from '../../exclusive';
 import { buildOffDay, toDateParam } from '../../../utils/testData';
 
 // Working hours drive SLA clocks and off days close the workspace, so these tests run on their

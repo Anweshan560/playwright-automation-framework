@@ -1,5 +1,5 @@
 import { test, expect } from '../../../fixtures/test';
-import { runOnlyOnItsOwn } from '../exclusive';
+import { runOnlyOnItsOwn } from '../../exclusive';
 
 // Assignment rules change how every conversation is assigned, so these tests run on their own and
 // put the rules back afterwards.

@@ -1,5 +1,5 @@
 import { test, expect } from '../../../fixtures/test';
-import { runOnlyOnItsOwn } from '../exclusive';
+import { runOnlyOnItsOwn } from '../../exclusive';
 import { env } from '../../../config/env';
 import { buildFollowUpCreditDays, buildWorkspaceName } from '../../../utils/testData';
 

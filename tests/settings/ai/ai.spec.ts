@@ -1,5 +1,5 @@
 import { test, expect } from '../../../fixtures/test';
-import { runOnlyOnItsOwn } from '../exclusive';
+import { runOnlyOnItsOwn } from '../../exclusive';
 
 // The master AI switch affects every conversation, so these tests run on their own and switch it
 // back afterwards. They never turn on Echo replies, which would answer real conversations.

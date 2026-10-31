@@ -1,6 +1,6 @@
 import { test, expect } from '../../../fixtures/test';
 import { weekdayHours } from '../../../api/WorkspaceApi';
-import { runOnlyOnItsOwn } from '../exclusive';
+import { runOnlyOnItsOwn } from '../../exclusive';
 import { buildOffDay, toDateParam } from '../../../utils/testData';
 
 // The workspace's hours: every test puts them back afterwards.

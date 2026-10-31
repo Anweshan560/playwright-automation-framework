@@ -1,7 +1,7 @@
 import { test, expect } from '../../../fixtures/test';
 import type { LifecyclesApi } from '../../../api/ContactsApi';
 import type { Cleanup } from '../../../fixtures/test';
-import { runOnlyOnItsOwn } from '../exclusive';
+import { runOnlyOnItsOwn } from '../../exclusive';
 import { buildLifecycleStage } from '../../../utils/testData';
 
 /** Delete the stage named `name` after the test, if one was created. */

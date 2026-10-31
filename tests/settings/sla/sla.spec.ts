@@ -1,6 +1,6 @@
 import { test, expect } from '../../../fixtures/test';
 import { SLA_CLOCKS, defaultSlaClock } from '../../../api/WorkspaceApi';
-import { runOnlyOnItsOwn } from '../exclusive';
+import { runOnlyOnItsOwn } from '../../exclusive';
 import type { SlaClockName } from '../../../pages/settings/SlaPage';
 
 const CLOCKS: SlaClockName[] = [

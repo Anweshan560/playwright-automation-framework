@@ -1,5 +1,5 @@
 import { test, expect } from '../../../fixtures/test';
-import { runOnlyOnItsOwn } from '../exclusive';
+import { runOnlyOnItsOwn } from '../../exclusive';
 import { buildWorkspaceName } from '../../../utils/testData';
 
 // The test workspace itself: every test puts its name and settings back afterwards.

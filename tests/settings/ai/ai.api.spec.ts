@@ -1,5 +1,5 @@
 import { test, expect } from '../../../fixtures/test';
-import { runOnlyOnItsOwn } from '../exclusive';
+import { runOnlyOnItsOwn } from '../../exclusive';
 
 // The master AI switch is `config.aiEnabled` on the workspace: tests run on their own and switch
 // it back afterwards.

@@ -22,6 +22,7 @@ import type { HeadersProvider } from '../api/ResourceApi';
 import { TreatmentsApi } from '../api/TreatmentsApi';
 import { AssignmentApi, SlasApi, WorkspaceApi } from '../api/WorkspaceApi';
 import { RolesApi, WorkspaceUsersApi } from '../api/RolesApi';
+import { ReportsApi } from '../api/ReportsApi';
 import { WrapUpApi } from '../api/WrapUpApi';
 import { env } from '../config/env';
 import { LoginPage } from '../pages/auth/LoginPage';
@@ -50,6 +51,7 @@ import { LifecycleStagesPage } from '../pages/settings/LifecycleStagesPage';
 import { SlaPage } from '../pages/settings/SlaPage';
 import { WorkspaceGeneralPage } from '../pages/settings/WorkspaceGeneralPage';
 import { RolesPage } from '../pages/settings/RolesPage';
+import { DashboardPage, ReportsPage } from '../pages/reports/ReportsPage';
 import { WorkspaceUsersPage } from '../pages/settings/WorkspaceUsersPage';
 import { WebsitesPage } from '../pages/settings/WebsitesPage';
 
@@ -108,6 +110,9 @@ type Fixtures = {
   slasApi: SlasApi;
   assignmentApi: AssignmentApi;
   rolesPage: RolesPage;
+  reportsPage: ReportsPage;
+  dashboardPage: DashboardPage;
+  reportsApi: ReportsApi;
   rolesApi: RolesApi;
   workspaceUsersPage: WorkspaceUsersPage;
   workspaceUsersApi: WorkspaceUsersApi;
@@ -341,6 +346,18 @@ export const test = base.extend<Fixtures>({
 
   assignmentApi: async ({ request, apiHeaders }, use) => {
     await use(new AssignmentApi(request, apiHeaders));
+  },
+
+  reportsPage: async ({ page }, use) => {
+    await use(new ReportsPage(page));
+  },
+
+  dashboardPage: async ({ page }, use) => {
+    await use(new DashboardPage(page));
+  },
+
+  reportsApi: async ({ request, apiHeaders }, use) => {
+    await use(new ReportsApi(request, apiHeaders));
   },
 
   rolesPage: async ({ page, workspaceId }, use) => {

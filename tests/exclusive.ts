@@ -1,5 +1,5 @@
-import { test } from '../../fixtures/test';
-import { env } from '../../config/env';
+import { test } from '../fixtures/test';
+import { env } from '../config/env';
 
 /**
  * Call inside a test.describe whose tests change settings the other tests rely on (hours,

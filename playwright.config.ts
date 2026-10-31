@@ -14,11 +14,13 @@ const API_TESTS = /.*\.api\.spec\.ts/;
 /**
  * Exclusive tests change settings every other test relies on: the organization (switching its type
  * even hides the Clinic menu), and the workspace's general settings, hours, SLAs, assignment rules,
- * AI and lifecycle stages. They have their own project, run one test at a time, and only when asked
- * for: `npm run test:exclusive`, or last in `npm run test:all` (see env.runExclusiveTests).
+ * AI and lifecycle stages. The report-number tests join them: they count contacts, bookings and
+ * payments, which the parallel tests keep adding and removing. They have their own project, run one
+ * test at a time, and only when asked for: `npm run test:exclusive`, or last in `npm run test:all`
+ * (see env.runExclusiveTests).
  */
 const EXCLUSIVE_TESTS =
-  /settings[\\/](organization|workspace|hours|sla|assignment|ai|lifecycle)[\\/].*\.spec\.ts/;
+  /(settings[\\/](organization|workspace|hours|sla|assignment|ai|lifecycle)|reports[\\/]numbers)[\\/].*\.spec\.ts/;
 
 /**
  * Settings the workspace has only one of (today: the Wrap-Up outcomes). Tests change them and put
